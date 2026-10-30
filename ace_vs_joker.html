@@ -1,0 +1,2127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Astro Crash - Ace vs Joker</title>
+  
+  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+  <link rel="shortcut icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+  <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+
+  <script>
+    window.alert = function(msg) {
+      try {
+        if (window.parent && window.parent !== window && window.parent.showLobbyToast) {
+          window.parent.showLobbyToast(msg);
+          return;
+        }
+      } catch(e) {}
+      try {
+        let toast = document.createElement("div");
+        toast.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999999;background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.5);border:1px solid #38bdf8;pointer-events:none;font-family:sans-serif;";
+        toast.textContent = msg;
+        (document.body || document.documentElement).appendChild(toast);
+        setTimeout(() => toast.remove(), 2500);
+      } catch(err) {
+        console.log("[ALERT]", msg);
+      }
+    };
+  </script>
+  <script src="./pk96-balance.js"></script>
+
+  <!-- Google Fonts: Space Grotesk, Playfair Display & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Space Grotesk', 'sans-serif'],
+            serif: ['Playfair Display', 'serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- React 18 & ReactDOM 18 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin=""></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin=""></script>
+  
+  <!-- Babel standalone compiler for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <style>
+    /* High performance GPU rendering & anti-aliasing */
+    *, *::before, *::after {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+
+    .gpu-layer {
+      transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform, opacity;
+    }
+
+    /* Custom star twinkling background */
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; transform: translate3d(0,0,0); }
+      50% { opacity: 0.8; transform: translate3d(0,0,0); }
+    }
+    .twinkle-slow {
+      animation: twinkle 4s ease-in-out infinite;
+      will-change: opacity;
+    }
+    .twinkle-fast {
+      animation: twinkle 2s ease-in-out infinite;
+      will-change: opacity;
+    }
+
+    /* Velvet table texture and glowing borders */
+    .velvet-felt {
+      background: radial-gradient(circle at center, #59050d 0%, #150002 100%);
+    }
+
+    @keyframes neon-glow-ace {
+      0%, 100% { border-color: rgba(239, 68, 68, 0.3); box-shadow: 0 0 10px rgba(239, 68, 68, 0.2); }
+      50% { border-color: rgba(239, 68, 68, 0.7); box-shadow: 0 0 25px rgba(239, 68, 68, 0.5); }
+    }
+    .neon-ace {
+      animation: neon-glow-ace 3s infinite;
+      will-change: border-color, box-shadow;
+    }
+
+    @keyframes neon-glow-joke {
+      0%, 100% { border-color: rgba(245, 158, 11, 0.3); box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
+      50% { border-color: rgba(245, 158, 11, 0.7); box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }
+    }
+    .neon-joke {
+      animation: neon-glow-joke 3s infinite;
+      will-change: border-color, box-shadow;
+    }
+
+    /* Hand slide-in smooth 120fps transitions */
+    .hand-container {
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
+    }
+    
+    /* 3D Card flip setup */
+    .perspective-container {
+      perspective: 1000px;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+    }
+    .card-inner {
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-style: preserve-3d;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+    }
+    .card-flipped {
+      transform: rotateY(180deg) translate3d(0, 0, 0);
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Confetti animation */
+    @keyframes confetti-fall {
+      0% { transform: translate3d(0, -10px, 0) rotate(0deg); opacity: 1; }
+      100% { transform: translate3d(0, 100vh, 0) rotate(360deg); opacity: 0; }
+    }
+    .confetti-particle {
+      position: absolute;
+      animation: confetti-fall 2.8s linear forwards;
+      will-change: transform, opacity;
+    }
+
+    /* Burn Card Animations */
+    @keyframes disintegrate {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        filter: brightness(1) contrast(1);
+        opacity: 1;
+      }
+      25% {
+        transform: translate3d(0, 0, 0) scale(1.06) rotate(-2deg);
+        filter: brightness(1.5) drop-shadow(0 0 25px rgba(239, 68, 68, 0.8));
+      }
+      60% {
+        transform: translate3d(0, 0, 0) scale(0.92) rotate(4deg);
+        filter: brightness(2.2) drop-shadow(0 0 45px rgba(245, 158, 11, 0.9));
+        opacity: 0.85;
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(0.15) rotate(20deg);
+        filter: brightness(6) blur(6px);
+        opacity: 0;
+      }
+    }
+    .burning-card {
+      animation: disintegrate 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, filter, opacity;
+      transform: translate3d(0, 0, 0);
+    }
+
+    @keyframes flame-rise {
+      0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 0.95;
+        filter: blur(1px);
+      }
+      100% {
+        transform: translate3d(0, -90px, 0) scale(0.2) rotate(120deg);
+        opacity: 0;
+        filter: blur(5px);
+      }
+    }
+    .flame-particle {
+      position: absolute;
+      pointer-events: none;
+      animation: flame-rise 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      background: radial-gradient(circle, #f59e0b 0%, #ef4444 60%, transparent 100%);
+      border-radius: 50%;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Shuffling Card Left Animation */
+    @keyframes shuffle-left {
+      0% {
+        transform: translate3d(-35px, 0, 0) rotate(-10deg) scale(0.95);
+        z-index: 10;
+      }
+      25% {
+        transform: translate3d(40px, -8px, 0) rotate(5deg) scale(1.05);
+        z-index: 10;
+      }
+      50% {
+        transform: translate3d(35px, 0, 0) rotate(10deg) scale(0.95);
+        z-index: 20;
+      }
+      75% {
+        transform: translate3d(-40px, 8px, 0) rotate(-5deg) scale(1.05);
+        z-index: 20;
+      }
+      100% {
+        transform: translate3d(-35px, 0, 0) rotate(-10deg) scale(0.95);
+        z-index: 10;
+      }
+    }
+
+    /* Shuffling Card Right Animation */
+    @keyframes shuffle-right {
+      0% {
+        transform: translate3d(35px, 0, 0) rotate(10deg) scale(0.95);
+        z-index: 20;
+      }
+      25% {
+        transform: translate3d(-40px, 8px, 0) rotate(-5deg) scale(1.05);
+        z-index: 20;
+      }
+      50% {
+        transform: translate3d(-35px, 0, 0) rotate(-10deg) scale(0.95);
+        z-index: 10;
+      }
+      75% {
+        transform: translate3d(40px, -8px, 0) rotate(5deg) scale(1.05);
+        z-index: 10;
+      }
+      100% {
+        transform: translate3d(35px, 0, 0) rotate(10deg) scale(0.95);
+        z-index: 20;
+      }
+    }
+
+    .shuffling-left-anim {
+      animation: shuffle-left 0.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .shuffling-right-anim {
+      animation: shuffle-right 0.4s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+      will-change: transform;
+      transform: translate3d(0, 0, 0);
+    }
+
+    /* Ultra-smooth sliding dealing transitions from center deck to side slots */
+    @keyframes slide-to-left {
+      0% {
+        transform: translate3d(175px, 0, 0) scale(0.75) rotate(12deg);
+        opacity: 0.3;
+      }
+      15% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    @keyframes slide-to-right {
+      0% {
+        transform: translate3d(-175px, 0, 0) scale(0.75) rotate(-12deg);
+        opacity: 0.3;
+      }
+      15% {
+        opacity: 1;
+      }
+      100% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+        opacity: 1;
+      }
+    }
+    .deal-slide-left {
+      animation: slide-to-left 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
+    }
+    .deal-slide-right {
+      animation: slide-to-right 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      will-change: transform, opacity;
+      transform: translate3d(0, 0, 0);
+    }
+  </style>
+</head>
+<body class="bg-black text-white selection:bg-amber-500/30 overflow-hidden">
+  <div id="root"></div>
+  <script type="text/babel">
+
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // --- High-fidelity Web Audio Synthesizer Class ---
+    class GameAudioSynth {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+        this.noiseBuffer = null;
+      }
+      
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        if (!this.noiseBuffer) {
+          const sampleRate = this.ctx.sampleRate;
+          const bufferSize = sampleRate * 2; // 2 seconds
+          this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, sampleRate);
+          const data = this.noiseBuffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+          }
+        }
+        return this.ctx;
+      }
+      
+      playChip() {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.init();
+          const now = ctx.currentTime;
+          
+          // Realistic multi-chip clink (stack of chips clicking against each other and settling on felt)
+          // We trigger 3 micro-clicks spaced very closely (0ms, 18ms, 35ms)
+          const offsets = [0, 0.018, 0.035];
+          offsets.forEach((offset, idx) => {
+            const time = now + offset;
+            const osc1 = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+            
+            // Bright ring frequencies of high-quality clay/resin chips
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(2900 - idx * 100, time);
+            osc1.frequency.exponentialRampToValueAtTime(1400, time + 0.03);
+            
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(3800 - idx * 150, time);
+            osc2.frequency.exponentialRampToValueAtTime(1900, time + 0.025);
+            
+            // Decaying amplitude, each consecutive clink is slightly softer
+            const volume = 0.18 * Math.pow(0.65, idx);
+            gainNode.gain.setValueAtTime(volume, time);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.04);
+            
+            // High-passed noise for the sharp plastic/frictional snap
+            const noise = ctx.createBufferSource();
+            noise.buffer = this.noiseBuffer;
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(6000, time);
+            
+            const noiseGain = ctx.createGain();
+            noiseGain.gain.setValueAtTime(0.2 * Math.pow(0.6, idx), time);
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.008);
+            
+            osc1.connect(gainNode);
+            osc2.connect(gainNode);
+            gainNode.connect(ctx.destination);
+            
+            noise.connect(filter);
+            filter.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            
+            osc1.start(time);
+            osc2.start(time);
+            noise.start(time);
+            
+            osc1.stop(time + 0.05);
+            osc2.stop(time + 0.05);
+            noise.stop(time + 0.05);
+          });
+          
+          // Plus a subtle soft thud of the stack landing on the casino velvet felt
+          const thud = ctx.createOscillator();
+          const thudGain = ctx.createGain();
+          thud.type = 'sine';
+          thud.frequency.setValueAtTime(120, now);
+          thud.frequency.exponentialRampToValueAtTime(60, now + 0.09);
+          thudGain.gain.setValueAtTime(0.12, now);
+          thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          thud.connect(thudGain);
+          thudGain.connect(ctx.destination);
+          thud.start(now);
+          thud.stop(now + 0.1);
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+
+      playCardSlide(delay = 0, duration = 0.25) {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.init();
+          const now = ctx.currentTime + delay;
+          
+          // Generate realistic card friction slide sound
+          const noiseSource = ctx.createBufferSource();
+          noiseSource.buffer = this.noiseBuffer;
+          
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          // Sweep the friction band downward to simulate dragging paper cards
+          filter.frequency.setValueAtTime(1400, now);
+          filter.frequency.exponentialRampToValueAtTime(450, now + duration);
+          filter.Q.setValueAtTime(3.0, now);
+          
+          const gain = ctx.createGain();
+          gain.gain.setValueAtTime(0, now);
+          gain.gain.linearRampToValueAtTime(0.18, now + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+          
+          noiseSource.connect(filter);
+          filter.connect(gain);
+          gain.connect(ctx.destination);
+          
+          noiseSource.start(now);
+          noiseSource.stop(now + duration + 0.05);
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+
+      playCardFlip() {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.init();
+          const now = ctx.currentTime;
+          
+          // 1. Friction drag sound
+          this.playCardSlide(0, 0.16);
+          
+          // 2. Low-frequency thud sound of card hitting soft velvet table felt
+          const thud = ctx.createOscillator();
+          const thudGain = ctx.createGain();
+          thud.type = 'sine';
+          thud.frequency.setValueAtTime(110, now + 0.05);
+          thud.frequency.exponentialRampToValueAtTime(45, now + 0.15);
+          
+          thudGain.gain.setValueAtTime(0, now);
+          thudGain.gain.setValueAtTime(0.18, now + 0.05);
+          thudGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          
+          thud.connect(thudGain);
+          thudGain.connect(ctx.destination);
+          
+          thud.start(now + 0.05);
+          thud.stop(now + 0.2);
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+
+      playShuffle() {
+        if (!this.enabled) return;
+        try {
+          // Play a beautiful, rapid, rhythmically realistic sequence of slides & slaps!
+          // Simulates real shuffling sound pattern (riffle-riffle-cascade)
+          const slideDurations = [0.15, 0.13, 0.14, 0.12, 0.16, 0.18, 0.22];
+          const delays = [0, 0.16, 0.30, 0.43, 0.56, 0.72, 0.90];
+          
+          delays.forEach((delay, idx) => {
+            setTimeout(() => {
+              const ctx = this.init();
+              const now = ctx.currentTime;
+              
+              // Slide
+              const source = ctx.createBufferSource();
+              source.buffer = this.noiseBuffer;
+              
+              const filter = ctx.createBiquadFilter();
+              filter.type = 'bandpass';
+              filter.frequency.setValueAtTime(1300 - idx * 100, now);
+              filter.frequency.exponentialRampToValueAtTime(500, now + slideDurations[idx]);
+              filter.Q.setValueAtTime(4.0, now);
+              
+              const gain = ctx.createGain();
+              gain.gain.setValueAtTime(0.14, now);
+              gain.gain.exponentialRampToValueAtTime(0.001, now + slideDurations[idx]);
+              
+              source.connect(filter);
+              filter.connect(gain);
+              gain.connect(ctx.destination);
+              source.start(now);
+              source.stop(now + slideDurations[idx]);
+              
+              // Intermittent thuds
+              if (idx % 2 === 0 || idx === delays.length - 1) {
+                const osc = ctx.createOscillator();
+                const oGain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(130 - idx * 5, now + 0.03);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+                oGain.gain.setValueAtTime(0.12, now + 0.03);
+                oGain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.connect(oGain);
+                oGain.connect(ctx.destination);
+                osc.start(now + 0.03);
+                osc.stop(now + 0.15);
+              }
+            }, delay * 1000);
+          });
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+
+      playWin() {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.init();
+          const now = ctx.currentTime;
+          
+          // Celestial retro cascade of golden bells / synth chords
+          const scale = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50]; // C Major scale notes
+          scale.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+            
+            gain.gain.setValueAtTime(0, now + idx * 0.06);
+            gain.gain.linearRampToValueAtTime(0.15, now + idx * 0.06 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.5);
+            
+            // Add a sub-frequency to make the sound super warm
+            const sub = ctx.createOscillator();
+            const subGain = ctx.createGain();
+            sub.type = 'sine';
+            sub.frequency.setValueAtTime(freq / 2, now + idx * 0.06);
+            subGain.gain.setValueAtTime(0, now + idx * 0.06);
+            subGain.gain.linearRampToValueAtTime(0.08, now + idx * 0.06 + 0.02);
+            subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.4);
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.06);
+            osc.stop(now + idx * 0.06 + 0.5);
+            
+            sub.connect(subGain);
+            subGain.connect(ctx.destination);
+            sub.start(now + idx * 0.06);
+            sub.stop(now + idx * 0.06 + 0.5);
+          });
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+      
+      playLose() {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.init();
+          const now = ctx.currentTime;
+          
+          // Deep tragic cinematic synth sweep
+          const notes = [220.00, 196.00, 155.56, 110.00]; // Somber minor chords
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+            osc.frequency.linearRampToValueAtTime(freq - 25, now + idx * 0.15 + 0.6);
+            
+            // High pass filter to make it warmer and less harsh
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(500, now);
+            filter.frequency.exponentialRampToValueAtTime(120, now + 0.6);
+            
+            gain.gain.setValueAtTime(0, now + idx * 0.15);
+            gain.gain.linearRampToValueAtTime(0.09, now + idx * 0.15 + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 0.6);
+            
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.15);
+            osc.stop(now + idx * 0.15 + 0.6);
+          });
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+
+      playBurn() {
+        if (!this.enabled) return;
+        try {
+          const ctx = this.init();
+          const now = ctx.currentTime;
+          
+          // Real crackling incinerator fire effect:
+          // Low-frequency rumbling noise + rapid random snaps/crackles
+          const sizzleSource = ctx.createBufferSource();
+          sizzleSource.buffer = this.noiseBuffer;
+          sizzleSource.loop = true;
+          
+          const sizzleFilter = ctx.createBiquadFilter();
+          sizzleFilter.type = 'bandpass';
+          sizzleFilter.frequency.setValueAtTime(1000, now);
+          sizzleFilter.frequency.exponentialRampToValueAtTime(250, now + 1.4);
+          sizzleFilter.Q.setValueAtTime(1.5, now);
+          
+          const sizzleGain = ctx.createGain();
+          sizzleGain.gain.setValueAtTime(0.18, now);
+          sizzleGain.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+          
+          sizzleSource.connect(sizzleFilter);
+          sizzleFilter.connect(sizzleGain);
+          sizzleGain.connect(ctx.destination);
+          
+          sizzleSource.start(now);
+          sizzleSource.stop(now + 1.55);
+          
+          // Generate 12 random snap impulses during the cremation duration
+          for (let i = 0; i < 12; i++) {
+            const snapTime = now + Math.random() * 1.2;
+            const snapOsc = ctx.createOscillator();
+            const snapGain = ctx.createGain();
+            
+            snapOsc.type = 'sine';
+            snapOsc.frequency.setValueAtTime(3000 + Math.random() * 2000, snapTime);
+            
+            snapGain.gain.setValueAtTime(0.24, snapTime);
+            snapGain.gain.exponentialRampToValueAtTime(0.001, snapTime + 0.008);
+            
+            snapOsc.connect(snapGain);
+            snapGain.connect(ctx.destination);
+            
+            snapOsc.start(snapTime);
+            snapOsc.stop(snapTime + 0.015);
+          }
+        } catch (e) {
+          console.warn('Audio play failed', e);
+        }
+      }
+    }
+
+    const synth = new GameAudioSynth();
+
+    // --- Vector Illustrations ---
+
+    // Elegant crowned heart icon for ACE card with intricate engraving and gold trims
+    const AceIllustration = () => (
+      <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-[0_4px_10px_rgba(220,38,38,0.55)]" id="ace-illustration-svg">
+        <defs>
+          <radialGradient id="rubyGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ff4d4d" />
+            <stop offset="70%" stopColor="#cc0000" />
+            <stop offset="100%" stopColor="#7a0000" />
+          </radialGradient>
+          <linearGradient id="goldCrown" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ffe49c" />
+            <stop offset="50%" stopColor="#d4af37" />
+            <stop offset="100%" stopColor="#8a6d1c" />
+          </linearGradient>
+        </defs>
+        {/* Heart shape with ruby gradient */}
+        <path d="M50,33 C35,13 15,28 50,88 C85,28 65,13 50,33 Z" fill="url(#rubyGlow)" stroke="#ffe49c" strokeWidth="1.5" />
+        {/* Internal heart engrave/filigree lines */}
+        <path d="M50,42 C42,28 28,38 50,75 C72,38 58,28 50,42 Z" fill="none" stroke="#ffa3a3" strokeWidth="1" strokeDasharray="2,2" opacity="0.6" />
+        {/* Imperial Crown on top */}
+        <path d="M35,23 L41,31 L50,21 L59,31 L65,23 L59,35 L41,35 Z" fill="url(#goldCrown)" stroke="#8a6d1c" strokeWidth="1" />
+        <circle cx="50" cy="18" r="2.5" fill="#ffe49c" />
+        <circle cx="34" cy="20" r="2" fill="#ffe49c" />
+        <circle cx="66" cy="20" r="2" fill="#ffe49c" />
+      </svg>
+    );
+
+    // Whimsical glowing Joker hat and face with intricate details and custom tiger stripes elements (Tiger theme)
+    const JokerIllustration = () => (
+      <svg viewBox="0 0 100 100" className="w-full h-full filter drop-shadow-[0_4px_10px_rgba(245,158,11,0.5)]" id="joker-illustration-svg">
+        <defs>
+          <linearGradient id="jokerCap" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#1e1b4b" />
+          </linearGradient>
+          <linearGradient id="jokerFace" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#e2e8f0" />
+          </linearGradient>
+        </defs>
+        {/* Hat crown / Tiger jester horn */}
+        <path d="M28,52 C26,38 38,28 50,28 C62,28 74,38 72,52" fill="none" stroke="url(#jokerCap)" strokeWidth="4.5" strokeLinecap="round" />
+        <path d="M50,28 C45,12 24,20 24,20 M50,28 C55,12 76,20 76,20 M50,28 L50,10" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" />
+        {/* Golden bells */}
+        <circle cx="24" cy="20" r="5" fill="#fef08a" stroke="#d97706" strokeWidth="1" />
+        <circle cx="76" cy="20" r="5" fill="#fef08a" stroke="#d97706" strokeWidth="1" />
+        <circle cx="50" cy="9" r="5.5" fill="#fef08a" stroke="#d97706" strokeWidth="1" />
+        {/* Collar peaks */}
+        <path d="M26,68 L50,58 L74,68 L50,78 Z" fill="#b45309" stroke="#f59e0b" strokeWidth="1.5" />
+        {/* Face plate */}
+        <path d="M36,50 Q50,40 64,50 Q50,70 36,50 Z" fill="url(#jokerFace)" stroke="#1e293b" strokeWidth="1.5" />
+        {/* Eyes & Smirking expression */}
+        <path d="M41,47 Q44,43 47,47" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+        <path d="M53,47 Q56,43 59,47" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" />
+        <path d="M43,56 Q50,62 57,56" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+        {/* Small cheek paint stars */}
+        <path d="M37,53 L38,55 L40,55 L38.5,56 L39,58 L37.5,57 L36,58 L36.5,56 L35,55 L37,55 Z" fill="#d97706" />
+        <path d="M63,53 L64,55 L66,55 L64.5,56 L65,58 L63.5,57 L62,58 L62.5,56 L61,55 L63,55 Z" fill="#d97706" />
+      </svg>
+    );
+
+    // Shiny 3D Solid Gold Coin Component for Balance Display
+    const SolidGoldCoin = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" className={`${className} shrink-0 filter drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]`} id="solid-gold-coin">
+        <defs>
+          <linearGradient id="solidCoinRim" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fff8cd" />
+            <stop offset="35%" stopColor="#fbbf24" />
+            <stop offset="70%" stopColor="#b45309" />
+            <stop offset="100%" stopColor="#78350f" />
+          </linearGradient>
+          <radialGradient id="solidCoinFace" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fef08a" />
+            <stop offset="50%" stopColor="#eab308" />
+            <stop offset="100%" stopColor="#92400e" />
+          </radialGradient>
+        </defs>
+        <circle cx="12" cy="12" r="11" fill="url(#solidCoinRim)" stroke="#fef9c3" strokeWidth="0.8" />
+        <circle cx="12" cy="12" r="8.5" fill="url(#solidCoinFace)" stroke="#fef08a" strokeWidth="0.6" />
+        <circle cx="12" cy="12" r="7.2" fill="none" stroke="#fef9c3" strokeWidth="0.4" strokeDasharray="1.2 1.2" opacity="0.8" />
+        <text x="12" y="15.8" textAnchor="middle" fontSize="11" fontWeight="900" fontFamily="serif" fill="#78350f">
+          ₨
+        </text>
+        <text x="12" y="15.2" textAnchor="middle" fontSize="11" fontWeight="900" fontFamily="serif" fill="#fef9c3">
+          ₨
+        </text>
+      </svg>
+    );
+
+    // Beautiful realistic SVG dealer's arm/sleeve/wrist/fingers
+    const DealerHand = () => (
+      <svg viewBox="0 0 120 120" className="w-28 h-28 filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.7)]" id="dealer-hand-svg">
+        {/* Arm / Royal Purple velvet jacket sleeve */}
+        <path d="M68,120 L112,120 L94,62 L50,72 Z" fill="url(#sleeveGradient)" />
+        {/* Gold embroidered sleeve hem */}
+        <path d="M50,72 L94,62" stroke="#d4af37" strokeWidth="4.5" strokeLinecap="round" />
+        {/* Fine white shirt cuff underlay */}
+        <path d="M52,69 L91,60" stroke="#ffffff" strokeWidth="3" />
+        {/* Solid gold cufflink */}
+        <circle cx="72" cy="65" r="3.5" fill="#fef08a" stroke="#ca8a04" strokeWidth="1" />
+        
+        {/* Realistic grasping fingers (shaded skin tone) */}
+        <path d="M54,64 C54,64 42,52 39,47 C35,41 38,32 45,32 C49,32 53,38 53,38 M53,38 C53,38 43,24 47,19 C50,13 58,15 60,22 L60,40 M60,40 C60,40 56,15 61,10 C66,5 72,8 72,16 L69,40 M69,40 C69,40 69,12 75,10 C80,7 86,10 84,19 L78,44 M78,44 C78,44 80,18 86,16 C91,14 96,20 92,27 L84,52 C81,58 75,63 68,65 Z" fill="#ffe4e6" stroke="#fda4af" strokeWidth="1" />
+        
+        {/* Thumb pinch detail */}
+        <path d="M39,47 C37,43 29,42 25,45 C21,48 22,55 28,57 C35,59 44,57 51,53" fill="#ffe4e6" stroke="#fda4af" strokeWidth="1" />
+        
+        <defs>
+          <linearGradient id="sleeveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e0b36" />
+            <stop offset="50%" stopColor="#4a154b" />
+            <stop offset="100%" stopColor="#1e0b36" />
+          </linearGradient>
+        </defs>
+      </svg>
+    );
+
+    // --- Core Sub-Components ---
+
+    // A poker chip with 3D design and realistic stripes
+    const PokerChip = ({ value, size = 'md', animated = true }) => {
+      const getChipStyle = (val) => {
+        switch (val) {
+          case 1: return { bg: 'bg-emerald-600', border: 'border-emerald-400', text: 'text-white', accent: 'bg-emerald-800' };
+          case 10: return { bg: 'bg-blue-600', border: 'border-blue-400', text: 'text-white', accent: 'bg-blue-800' };
+          case 50: return { bg: 'bg-indigo-600', border: 'border-indigo-400', text: 'text-white', accent: 'bg-indigo-800' };
+          case 100: return { bg: 'bg-rose-600', border: 'border-rose-400', text: 'text-white', accent: 'bg-rose-800' };
+          case 1000: return { bg: 'bg-amber-500', border: 'border-amber-300', text: 'text-amber-950', accent: 'bg-amber-700' };
+          default: return { bg: 'bg-slate-600', border: 'border-slate-400', text: 'text-white', accent: 'bg-slate-800' };
+        }
+      };
+
+      const style = getChipStyle(value);
+      const sizeClasses = {
+        sm: 'w-8 h-8 text-[9px] border-2 shadow-md',
+        md: 'w-12 h-12 text-[11px] border-4 shadow-xl',
+        lg: 'w-16 h-16 text-sm border-[5px] shadow-2xl'
+      };
+
+      const displayVal = value >= 1000 ? `${value / 1000}K` : value;
+
+      return (
+        <div 
+          className={`rounded-full flex items-center justify-center font-extrabold font-mono relative shrink-0 ${sizeClasses[size]} ${style.bg} ${style.border} ${style.text} select-none overflow-hidden transition-transform duration-150`}
+          style={{
+            boxShadow: '0 5px 12px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.4)'
+          }}
+          id={`poker-chip-render-${value}`}
+        >
+          {/* Outer dashed border */}
+          <div className="absolute inset-0.5 rounded-full border border-dashed border-white/45 pointer-events-none"></div>
+          {/* Internal striped details */}
+          <div className="absolute inset-0 flex justify-center items-center pointer-events-none opacity-25">
+            <div className={`w-full h-2 ${style.accent} rotate-0 absolute`}></div>
+            <div className={`w-full h-2 ${style.accent} rotate-45 absolute`}></div>
+            <div className={`w-full h-2 ${style.accent} rotate-90 absolute`}></div>
+            <div className={`w-full h-2 ${style.accent} rotate-135 absolute`}></div>
+          </div>
+          {/* Inner ring */}
+          <div className="absolute inset-1.5 rounded-full bg-slate-950/20 border border-white/20 pointer-events-none"></div>
+          {/* Central text circle */}
+          <div className="absolute w-2/3 h-2/3 rounded-full bg-slate-950 border border-white/20 flex items-center justify-center shadow-[inset_0_2px_5px_rgba(0,0,0,0.85)] z-10">
+            <span className="text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] tracking-tight font-black">{displayVal}</span>
+          </div>
+        </div>
+      );
+    };
+
+    // A beautiful playing card showing either backing or elegant details
+    const PlayingCard = ({ card, flipped, isWinning }) => {
+      const getSuitSymbol = (suit) => {
+        switch (suit) {
+          case 'hearts': return '♥';
+          case 'diamonds': return '♦';
+          case 'clubs': return '♣';
+          case 'spades': return '♠';
+          default: return '★';
+        }
+      };
+
+      const isRed = card?.suit === 'hearts' || card?.suit === 'diamonds';
+
+      return (
+        <div className="relative w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36 perspective-container animate-fade-in" id="playing-card-container">
+          <div className={`w-full h-full relative card-inner rounded-xl shadow-2xl ${flipped ? 'card-flipped' : ''} ${isWinning ? 'ring-4 ring-amber-400 ring-offset-4 ring-offset-slate-950 shadow-[0_0_35px_rgba(245,158,11,0.8)]' : ''}`}>
+            
+            {/* Card Backing */}
+            <div className="absolute inset-0 w-full h-full rounded-xl backface-hidden bg-gradient-to-br from-[#ffe07a] via-[#c78e1b] to-[#593d05] border-2 border-[#fff0b3] p-1 flex flex-col justify-between overflow-hidden shadow-[inset_0_2px_10px_rgba(255,255,255,0.4),0_6px_12px_rgba(0,0,0,0.6)]">
+              <div className="absolute inset-0.5 border border-[#ffeb99]/40 rounded-lg pointer-events-none"></div>
+              
+              {/* Complex royal repeating pattern of fine lines */}
+              <div className="absolute inset-1.5 opacity-20 pointer-events-none">
+                <svg viewBox="0 0 100 130" className="w-full h-full text-amber-200 fill-none stroke-current" strokeWidth="0.5">
+                  <path d="M0,0 L100,130 M100,0 L0,130 M0,65 L100,65 M50,0 L50,130 M0,32.5 L100,32.5 M0,97.5 L100,97.5 M25,0 L25,130 M75,0 L75,130" />
+                  <circle cx="50" cy="65" r="25" />
+                  <circle cx="50" cy="65" r="15" />
+                </svg>
+              </div>
+
+              <div className="text-[5px] sm:text-[6px] text-[#ffeb99] font-serif font-black tracking-widest text-center leading-none z-10">★ ROYAL ★</div>
+              
+              <div className="flex-1 flex items-center justify-center z-10">
+                <div className="w-13 h-18 sm:w-16 sm:h-24 border border-[#ffeb99]/40 rounded bg-gradient-to-b from-[#590409] to-[#120002] flex flex-col items-center justify-center relative shadow-[inset_0_2px_8px_rgba(0,0,0,0.9)] overflow-hidden">
+                  
+                  {/* Gold Crown Watermark in Center of back */}
+                  <div className="absolute inset-2 flex items-center justify-center opacity-30">
+                    <svg viewBox="0 0 100 100" className="w-8 h-8 sm:w-10 sm:h-10 text-amber-400 fill-current">
+                      <path d="M10,80 L25,35 L45,55 L50,15 L55,55 L75,35 L90,80 Z" />
+                      <circle cx="10" cy="80" r="5" />
+                      <circle cx="25" cy="35" r="5" />
+                      <circle cx="50" cy="15" r="5" />
+                      <circle cx="75" cy="35" r="5" />
+                      <circle cx="90" cy="80" r="5" />
+                    </svg>
+                  </div>
+
+                  <div className="text-[4px] sm:text-[5px] text-[#ffeb99] font-serif tracking-widest font-black uppercase z-10">GOLDEN</div>
+                  <div className="text-xs text-[#f3c051] font-black my-0.5 z-10">★</div>
+                  <div className="text-[4px] sm:text-[5px] text-[#ffeb99] font-serif tracking-widest font-black uppercase z-10">DECK</div>
+                </div>
+              </div>
+              
+              <div className="text-[5px] sm:text-[6px] text-[#ffeb99] font-serif font-black tracking-widest text-center leading-none z-10">★ SERIES ★</div>
+            </div>
+
+            {/* Card Front */}
+            <div className="absolute inset-0 w-full h-full rounded-xl backface-hidden [transform:rotateY(180deg)] bg-gradient-to-tr from-stone-50 via-white to-stone-100 border-2 border-amber-500/40 p-1.5 flex flex-col justify-between shadow-[0_10px_25px_rgba(0,0,0,0.5)] overflow-hidden">
+              
+              {/* Intricate Gold Borders */}
+              <div className="absolute inset-0.5 border border-amber-600/20 rounded-lg pointer-events-none"></div>
+              <div className="absolute inset-1 border border-dashed border-amber-600/10 rounded-lg pointer-events-none"></div>
+              <div className="absolute inset-2.5 border border-amber-600/5 rounded-lg pointer-events-none"></div>
+              
+              {/* Victorian Corner Ornaments (Filigree SVGs) */}
+              <div className="absolute top-1 left-1 w-3 h-3 text-amber-600/50 pointer-events-none">
+                <svg viewBox="0 0 10 10" className="w-full h-full fill-current">
+                  <path d="M0,0 L10,0 L10,2 L2,2 L2,10 L0,10 Z M2,2 Q4,4 5,2 L4,1 Z" />
+                </svg>
+              </div>
+              <div className="absolute top-1 right-1 w-3 h-3 text-amber-600/50 transform rotate-90 pointer-events-none">
+                <svg viewBox="0 0 10 10" className="w-full h-full fill-current">
+                  <path d="M0,0 L10,0 L10,2 L2,2 L2,10 L0,10 Z M2,2 Q4,4 5,2 L4,1 Z" />
+                </svg>
+              </div>
+              <div className="absolute bottom-1 left-1 w-3 h-3 text-amber-600/50 transform -rotate-90 pointer-events-none">
+                <svg viewBox="0 0 10 10" className="w-full h-full fill-current">
+                  <path d="M0,0 L10,0 L10,2 L2,2 L2,10 L0,10 Z M2,2 Q4,4 5,2 L4,1 Z" />
+                </svg>
+              </div>
+              <div className="absolute bottom-1 right-1 w-3 h-3 text-amber-600/50 transform rotate-180 pointer-events-none">
+                <svg viewBox="0 0 10 10" className="w-full h-full fill-current">
+                  <path d="M0,0 L10,0 L10,2 L2,2 L2,10 L0,10 Z M2,2 Q4,4 5,2 L4,1 Z" />
+                </svg>
+              </div>
+
+              {/* Luxury Stamp Labels on Left & Right margins */}
+              <div className="absolute top-[4px] left-1/2 -translate-x-1/2 text-[4px] text-amber-600/40 tracking-[2px] font-mono leading-none uppercase select-none pointer-events-none hidden xs:block">ROYAL CASINO</div>
+              <div className="absolute bottom-[4px] left-1/2 -translate-x-1/2 text-[4px] text-amber-600/40 tracking-[2px] font-mono leading-none uppercase transform rotate-180 select-none pointer-events-none hidden xs:block">ROYAL CASINO</div>
+
+              {/* Faint Royal Engraved Watermark Background */}
+              <div className="absolute inset-2 flex items-center justify-center opacity-[0.08] pointer-events-none">
+                <svg viewBox="0 0 100 100" className="w-full h-full text-amber-600 fill-current">
+                  <path d="M50,5 L95,50 L50,95 L5,50 Z M50,15 L85,50 L50,85 L15,50 Z" />
+                  <circle cx="50" cy="50" r="16" fill="none" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              </div>
+              
+              {card ? (
+                <React.Fragment>
+                  {/* Top-Left Rank/Suit */}
+                  <div className={`flex flex-col items-center leading-none z-10 ${isRed ? 'text-red-600' : 'text-zinc-900'}`}>
+                    <span className="text-xs sm:text-sm md:text-base font-serif font-black tracking-tight">{card.label}</span>
+                    <span className="text-[8px] sm:text-[10px]">{getSuitSymbol(card.suit)}</span>
+                  </div>
+
+                  {/* Center Illustration Frame */}
+                  <div className="flex-1 flex items-center justify-center relative z-10 my-0.5">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 rounded-full border border-dashed border-amber-500/45 bg-gradient-to-b from-amber-500/5 via-white/95 to-amber-600/10 flex items-center justify-center p-1 shadow-[inset_0_2px_5px_rgba(0,0,0,0.05),0_2px_4px_rgba(0,0,0,0.05)]">
+                      <div className="scale-65 sm:scale-75 md:scale-90 flex items-center justify-center">
+                        {card.label === 'A' ? <AceIllustration /> : <JokerIllustration />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom-Right Rank/Suit (Inverted) */}
+                  <div className={`flex flex-col items-center leading-none transform rotate-180 self-end z-10 ${isRed ? 'text-red-600' : 'text-zinc-900'}`}>
+                    <span className="text-xs sm:text-sm md:text-base font-serif font-black tracking-tight">{card.label}</span>
+                    <span className="text-[8px] sm:text-[10px]">{getSuitSymbol(card.suit)}</span>
+                  </div>
+                </React.Fragment>
+              ) : (
+                <div className="flex items-center justify-center h-full text-amber-600/60 font-serif text-[10px] italic tracking-widest uppercase">
+                  Dealing...
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    // --- Main Table Component ---
+    const BettingTable = ({ phase, bets, placements, onPlaceBet, isWinningOption }) => {
+      const handleCellClick = (e, option) => {
+        if (phase !== 'BETTING') return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        // Calculate percentages for precise chip layering
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        onPlaceBet(option, Math.max(15, Math.min(85, x)), Math.max(25, Math.min(75, y)));
+      };
+
+      return (
+        <div className="w-full max-w-3xl mx-auto px-4 z-10" id="casino-betting-table">
+          <div className="w-full bg-[#1c0205]/95 rounded-2xl border-4 border-[#b1892d] shadow-[0_15px_35px_rgba(0,0,0,0.8)] relative overflow-hidden p-2 sm:p-3 flex flex-col gap-2 sm:gap-3">
+            
+            {/* Elegant Table Accents */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100%_5px] pointer-events-none"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-[#d2a33c] via-[#ffe39c] to-[#98721c] border-r border-[#ffe39c]/20 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-3 bg-gradient-to-l from-[#d2a33c] via-[#ffe39c] to-[#98721c] border-l border-[#ffe39c]/20 pointer-events-none"></div>
+
+            {/* Betting spots layout: 2 Columns for Ace vs Joker */}
+            <div className="grid grid-cols-2 gap-3 relative z-10 w-full">
+              
+              {/* ACE Betting Box (Crimson Dragon Side) */}
+              <button 
+                onClick={(e) => handleCellClick(e, 'ACE')}
+                disabled={phase !== 'BETTING'}
+                className={`group relative h-24 sm:h-32 md:h-38 rounded-xl flex flex-col items-center justify-between p-2 sm:p-3 border-2 transition-all overflow-hidden ${
+                  phase === 'BETTING' ? 'cursor-pointer active:scale-[0.98]' : 'cursor-default'
+                } ${
+                  isWinningOption === 'ACE' 
+                    ? 'border-yellow-400 bg-gradient-to-b from-[#7e111a] via-[#4d070e] to-[#250104] ring-4 ring-yellow-400/60 shadow-[0_0_45px_rgba(239,68,68,0.85)]' 
+                    : 'border-red-950/50 bg-gradient-to-b from-[#250306] via-[#150002] to-[#0a0001] hover:border-red-500/40 hover:from-[#320509] hover:via-[#1c0103] hover:to-[#0d0001]'
+                }`}
+                style={{ transitionDuration: '150ms' }}
+                id="betting-box-ace"
+              >
+                {/* Decorative corner brackets */}
+                <div className="absolute top-1.5 left-1.5 w-3 h-3 border-t-2 border-l-2 border-red-500/50 group-hover:border-red-400 pointer-events-none transition-colors"></div>
+                <div className="absolute top-1.5 right-1.5 w-3 h-3 border-t-2 border-r-2 border-red-500/50 group-hover:border-red-400 pointer-events-none transition-colors"></div>
+                <div className="absolute bottom-1.5 left-1.5 w-3 h-3 border-b-2 border-l-2 border-red-500/50 group-hover:border-red-400 pointer-events-none transition-colors"></div>
+                <div className="absolute bottom-1.5 right-1.5 w-3 h-3 border-b-2 border-r-2 border-red-500/50 group-hover:border-red-400 pointer-events-none transition-colors"></div>
+
+                {/* Background Pattern - Oriental Dragon Medallion & Clouds */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] group-hover:opacity-[0.11] group-hover:scale-110 transition-all duration-700 pointer-events-none">
+                  <svg viewBox="0 0 100 100" className="w-52 h-52 text-red-500 fill-none stroke-current stroke-[0.5]" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="50" cy="50" r="45" strokeDasharray="3,3" />
+                    <circle cx="50" cy="50" r="38" />
+                    <path d="M50,15 A35,35 0 0,1 85,50 A35,35 0 0,1 50,85 A35,35 0 0,1 15,50 A35,35 0 0,1 50,15 Z" />
+                    <path d="M50,22 C40,22 30,30 30,45 C30,60 50,65 50,75 C50,80 45,82 40,80" />
+                    <path d="M50,22 C60,22 70,30 70,45 C70,60 50,65 50,75" />
+                    <path d="M30,45 C20,48 20,55 30,58" />
+                    <path d="M70,45 C80,48 80,55 70,58" />
+                    <line x1="50" y1="5" x2="50" y2="15" />
+                    <line x1="50" y1="85" x2="50" y2="95" />
+                    <line x1="5" y1="50" x2="15" y2="50" />
+                    <line x1="85" y1="50" x2="95" y2="50" />
+                  </svg>
+                </div>
+
+                <div className="text-[8px] uppercase font-bold tracking-widest text-red-400 relative z-10">Bet Payout 1:0.9</div>
+                
+                <div className="flex flex-col items-center justify-center flex-1 relative z-10">
+                  <span className="text-2xl sm:text-3xl font-black tracking-widest text-red-100 font-serif drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">ACE</span>
+                  <span className="text-[9px] font-bold text-red-400/90 mt-0.5 uppercase leading-none">Crimson Dragon Spot</span>
+                </div>
+
+                <div className="w-full flex justify-between items-center bg-[#0d0001]/75 px-2.5 py-0.5 rounded-md border border-red-500/20 leading-none relative z-10">
+                  <span className="text-[8px] font-bold text-red-400/60 uppercase">My Bet</span>
+                  <span className="text-xs sm:text-sm font-mono font-extrabold text-red-300">{bets.ACE > 0 ? bets.ACE.toLocaleString() : '0'}</span>
+                </div>
+
+                {/* Render stacked chips inside this zone */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+                  {placements.filter(chip => chip.option === 'ACE').map(chip => (
+                    <div 
+                      key={chip.id} 
+                      className="absolute"
+                      style={{ left: `${chip.x}%`, top: `${chip.y}%`, transform: 'translate(-50%, -50%)' }}
+                    >
+                      <PokerChip value={chip.value} size="sm" />
+                    </div>
+                  ))}
+                </div>
+              </button>
+
+              {/* JOKER/JOKE Betting Box (Charcoal Tiger Side) */}
+              <button 
+                onClick={(e) => handleCellClick(e, 'JOKER')}
+                disabled={phase !== 'BETTING'}
+                className={`group relative h-24 sm:h-32 md:h-38 rounded-xl flex flex-col items-center justify-between p-2 sm:p-3 border-2 transition-all overflow-hidden ${
+                  phase === 'BETTING' ? 'cursor-pointer active:scale-[0.98]' : 'cursor-default'
+                } ${
+                  isWinningOption === 'JOKER' 
+                    ? 'border-yellow-400 bg-gradient-to-b from-[#6e460b] via-[#3a2202] to-[#1c1000] ring-4 ring-yellow-400/60 shadow-[0_0_45px_rgba(245,158,11,0.85)]' 
+                    : 'border-amber-950/50 bg-gradient-to-b from-[#181005] via-[#0d0801] to-[#040200] hover:border-amber-500/40 hover:from-[#211708] hover:via-[#130d02] hover:to-[#080500]'
+                }`}
+                style={{ transitionDuration: '150ms' }}
+                id="betting-box-joker"
+              >
+                {/* Decorative corner brackets */}
+                <div className="absolute top-1.5 left-1.5 w-3 h-3 border-t-2 border-l-2 border-amber-500/50 group-hover:border-amber-400 pointer-events-none transition-colors"></div>
+                <div className="absolute top-1.5 right-1.5 w-3 h-3 border-t-2 border-r-2 border-amber-500/50 group-hover:border-amber-400 pointer-events-none transition-colors"></div>
+                <div className="absolute bottom-1.5 left-1.5 w-3 h-3 border-b-2 border-l-2 border-amber-500/50 group-hover:border-amber-400 pointer-events-none transition-colors"></div>
+                <div className="absolute bottom-1.5 right-1.5 w-3 h-3 border-b-2 border-r-2 border-amber-500/50 group-hover:border-amber-400 pointer-events-none transition-colors"></div>
+
+                {/* Background Pattern - Golden Tiger/Geometric Medallion */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] group-hover:opacity-[0.11] group-hover:scale-110 transition-all duration-700 pointer-events-none">
+                  <svg viewBox="0 0 100 100" className="w-52 h-52 text-amber-500 fill-none stroke-current stroke-[0.5]" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="50" cy="50" r="45" />
+                    <polygon points="50,12 59,38 88,38 65,54 74,80 50,64 26,80 35,54 12,38 41,38" strokeDasharray="2,2" />
+                    <circle cx="50" cy="50" r="28" />
+                    <line x1="50" y1="5" x2="50" y2="15" />
+                    <line x1="50" y1="85" x2="50" y2="95" />
+                    <line x1="5" y1="50" x2="15" y2="50" />
+                    <line x1="85" y1="50" x2="95" y2="50" />
+                    <line x1="18" y1="18" x2="25" y2="25" />
+                    <line x1="82" y1="18" x2="75" y2="25" />
+                    <line x1="18" y1="82" x2="25" y2="75" />
+                    <line x1="82" y1="82" x2="75" y2="75" />
+                  </svg>
+                </div>
+
+                <div className="text-[8px] uppercase font-bold tracking-widest text-amber-400 relative z-10">Bet Payout 1:0.9</div>
+                
+                <div className="flex flex-col items-center justify-center flex-1 relative z-10">
+                  <span className="text-2xl sm:text-3xl font-black tracking-widest text-amber-100 font-serif drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] leading-none">JOKE</span>
+                  <span className="text-[9px] font-bold text-amber-400/90 mt-0.5 uppercase leading-none">Golden Tiger Spot</span>
+                </div>
+
+                <div className="w-full flex justify-between items-center bg-[#0d0a02]/75 px-2.5 py-0.5 rounded-md border border-amber-500/20 leading-none relative z-10">
+                  <span className="text-[8px] font-bold text-amber-400/60 uppercase">My Bet</span>
+                  <span className="text-xs sm:text-sm font-mono font-extrabold text-amber-300">{bets.JOKER > 0 ? bets.JOKER.toLocaleString() : '0'}</span>
+                </div>
+
+                {/* Render stacked chips inside this zone */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
+                  {placements.filter(chip => chip.option === 'JOKER').map(chip => (
+                    <div 
+                      key={chip.id} 
+                      className="absolute"
+                      style={{ left: `${chip.x}%`, top: `${chip.y}%`, transform: 'translate(-50%, -50%)' }}
+                    >
+                      <PokerChip value={chip.value} size="sm" />
+                    </div>
+                  ))}
+                </div>
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+      );
+    };
+
+    // --- Rules Help Modal ---
+    const HelpModal = ({ isOpen, onClose }) => {
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm" id="rules-help-modal">
+          <div className="relative w-full max-w-lg bg-gradient-to-b from-slate-900 to-slate-950 border border-amber-500/40 rounded-2xl shadow-2xl p-6 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl -z-10"></div>
+            
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-4">
+              <div className="flex items-center gap-2 text-amber-400">
+                <span className="text-xl font-bold font-sans">Rules of Ace vs Joker</span>
+              </div>
+              <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors p-1 hover:bg-slate-800 rounded-full" aria-label="Close" id="rules-close-icon">
+                <i data-lucide="x" className="w-5 h-5"></i>
+              </button>
+            </div>
+
+            <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
+              <div>
+                <h3 className="text-amber-300 font-bold mb-1">Simple Gameplay</h3>
+                <p>This is an elegant offline single-player card game. There are only two cards in the entire deck: the majestic <strong>Ace</strong> and the chaotic <strong>Joker</strong>.</p>
+              </div>
+
+              <div>
+                <h3 className="text-amber-300 font-bold mb-2">How to Play</h3>
+                <ol className="list-decimal pl-5 space-y-2">
+                  <li>Choose your desired chip size from the bottom selector.</li>
+                  <li>Place your chips on either the <strong>ACE</strong> betting area (on the left) or the <strong>JOKE</strong> betting area (on the right).</li>
+                  <li>Click the pulsing golden <strong>GO</strong> button in the bottom right corner.</li>
+                  <li>Watch the dealer's hand sweep in, draw a card, and place it in the center reveal zone!</li>
+                </ol>
+              </div>
+
+              <div>
+                <h3 className="text-amber-300 font-bold mb-1">Winning Payout</h3>
+                <p>If the revealed card is the one where you placed your bet, you win a <strong>1.9x payout</strong> (your original bet back + 90% profit). If not, the bet goes to the house.</p>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-xs text-slate-400">
+                <strong>Balance & Deposits:</strong> Your game balance is fully synchronized with your real lobby balance. If your balance runs low, use the Deposit button to top up anytime!
+              </div>
+            </div>
+
+            <div className="border-t border-slate-800 pt-4 mt-6 flex justify-end">
+              <button onClick={onClose} className="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 text-slate-950 font-black text-xs rounded-lg uppercase tracking-wider shadow-lg transition-transform hover:scale-105" id="rules-got-it-btn">
+                Got It
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+
+
+    // --- Core Main Component ---
+    function App() {
+      // Helper to retrieve live balance from PK96 API, parent window, or local storage
+      const getLiveLobbyBalance = () => {
+        if (typeof window !== 'undefined' && window.PK96 && typeof window.PK96.getBalance === 'function') {
+          const b = window.PK96.getBalance();
+          if (typeof b === 'number' && !isNaN(b)) return b;
+        }
+
+        try {
+          if (window.parent && window.parent !== window && window.parent.PK96 && typeof window.parent.PK96.getBalance === 'function') {
+            const pb = window.parent.PK96.getBalance();
+            if (typeof pb === 'number' && !isNaN(pb)) return pb;
+          }
+        } catch(e) {}
+
+        try {
+          if (typeof window !== 'undefined' && window.PK96 && typeof window.PK96.isLoggedIn === 'function' && !window.PK96.isLoggedIn()) {
+            return 0;
+          }
+          const b2 = localStorage.getItem('pk96_balance');
+          if (b2 !== null && !isNaN(Number(b2))) return Number(b2);
+        } catch(e) {}
+
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const pBal = params.get('pk96_bal');
+          if (pBal !== null && !isNaN(Number(pBal))) {
+            return Number(pBal);
+          }
+        } catch(e) {}
+
+        return 0;
+      };
+
+      // Game state variables
+      const [balance, setBalance] = useState(getLiveLobbyBalance);
+
+      // Synchronize balance with lobby in real-time across events, storage, and postMessage
+      useEffect(() => {
+        const syncBalanceFromLobby = () => {
+          const fresh = getLiveLobbyBalance();
+          setBalance(prev => (Math.abs(prev - fresh) >= 0.01 ? fresh : prev));
+        };
+
+        const handleMessage = (e) => {
+          if (e.data && (e.data.type === 'PK96_BALANCE_UPDATE' || e.data.type === 'PK96_SYNC_RESPONSE')) {
+            if (typeof e.data.balance === 'number' && !isNaN(e.data.balance)) {
+              setBalance(prev => (Math.abs(prev - e.data.balance) >= 0.01 ? e.data.balance : prev));
+            }
+          }
+        };
+
+        window.addEventListener('pk96_balance_changed', syncBalanceFromLobby);
+        window.addEventListener('storage', syncBalanceFromLobby);
+        window.addEventListener('message', handleMessage);
+
+        if (window.parent && window.parent !== window) {
+          try {
+            window.parent.postMessage({ type: 'PK96_REQUEST_SYNC' }, '*');
+          } catch(e) {}
+        }
+
+        syncBalanceFromLobby();
+
+        return () => {
+          window.removeEventListener('pk96_balance_changed', syncBalanceFromLobby);
+          window.removeEventListener('storage', syncBalanceFromLobby);
+          window.removeEventListener('message', handleMessage);
+        };
+      }, []);
+
+      const [bets, setBets] = useState({ ACE: 0, JOKER: 0 });
+      const [previousBets, setPreviousBets] = useState({ ACE: 0, JOKER: 0 });
+      const [selectedChip, setSelectedChip] = useState(10);
+      const [phase, setPhase] = useState('BETTING'); // BETTING, SHUFFLING, DEALING, RESULT
+      const [leftCard, setLeftCard] = useState(null);
+      const [rightCard, setRightCard] = useState(null);
+      const [leftFlipped, setLeftFlipped] = useState(false);
+      const [rightFlipped, setRightFlipped] = useState(false);
+      const [burnedSide, setBurnedSide] = useState(null); // 'LEFT' or 'RIGHT'
+      const [lastBurnSide, setLastBurnSide] = useState(() => localStorage.getItem('casino_last_burn_side') || 'RIGHT');
+      const [roundResult, setRoundResult] = useState(null);
+      const resetTimeoutRef = useRef(null);
+      const [winner, setWinner] = useState(null);
+      const [statusMessage, setStatusMessage] = useState("Place your bets on Ace or Joker, then click GO!");
+      const [statusColor, setStatusColor] = useState("text-amber-400");
+      const [history, setHistory] = useState(() => {
+        const saved = localStorage.getItem('casino_history');
+        return saved ? JSON.parse(saved) : [];
+      });
+
+      const [chipPlacements, setChipPlacements] = useState([]);
+      const [soundEnabled, setSoundEnabled] = useState(true);
+      const [isHelpOpen, setIsHelpOpen] = useState(false);
+      const [winPayout, setWinPayout] = useState(null);
+
+      // Burn Card custom states
+      const [burnCardBurning, setBurnCardBurning] = useState(false);
+      const [flameParticles, setFlameParticles] = useState([]);
+
+      // Confetti visual list
+      const [confetti, setConfetti] = useState([]);
+
+      // Initialize Lucide icons on render
+      useEffect(() => {
+        if (typeof window !== 'undefined' && window.lucide && typeof window.lucide.createIcons === 'function') {
+          try {
+            window.lucide.createIcons();
+          } catch(e) {}
+        }
+      }, [isHelpOpen, soundEnabled, phase]);
+
+      // Sound sync
+      useEffect(() => {
+        synth.enabled = soundEnabled;
+      }, [soundEnabled]);
+
+      // Confetti generator for win celebration
+      const triggerConfetti = () => {
+        const temp = [];
+        const colors = ['#fecdd3', '#a7f3d0', '#fef08a', '#93c5fd', '#c084fc', '#fb923c'];
+        for (let i = 0; i < 60; i++) {
+          temp.push({
+            id: i,
+            x: Math.random() * 100,
+            y: -10 - Math.random() * 20,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            size: Math.random() * 8 + 6,
+            delay: Math.random() * 0.5,
+            duration: Math.random() * 2 + 1.5
+          });
+        }
+        setConfetti(temp);
+        setTimeout(() => setConfetti([]), 3500);
+      };
+
+      // Bet Placing controller
+      const handlePlaceBet = (option, x, y) => {
+        if (phase !== 'BETTING') return;
+        const currentBal = (window.PK96 && typeof window.PK96.getBalance === 'function')
+          ? window.PK96.getBalance()
+          : balance;
+
+        if (currentBal < selectedChip) {
+          setStatusMessage("Insufficient Balance! Please deposit in lobby.");
+          setStatusColor("text-red-400");
+          if (window.parent && window.parent !== window && typeof window.parent.showDepositModal === 'function') {
+            window.parent.showDepositModal();
+          }
+          return;
+        }
+
+        // Deduct from balance immediately and sync with lobby
+        const next = Math.max(0, currentBal - selectedChip);
+        setBalance(next);
+        try {
+          if (window.PK96 && typeof window.PK96.recordBet === 'function') {
+            window.PK96.recordBet(selectedChip);
+          }
+          if (window.PK96 && typeof window.PK96.setBalance === 'function') {
+            window.PK96.setBalance(next, false);
+          }
+        } catch(e) {}
+
+        setBets(prev => ({
+          ...prev,
+          [option]: prev[option] + selectedChip
+        }));
+
+        // Add 3D placement chip overlay
+        const newChip = {
+          id: `chip-${Date.now()}-${Math.random()}`,
+          option,
+          value: selectedChip,
+          x,
+          y
+        };
+
+        setChipPlacements(prev => [...prev, newChip]);
+        synth.playChip();
+        setStatusMessage(`Placed ${selectedChip} bet on ${option}!`);
+        setStatusColor("text-indigo-300");
+      };
+
+      // Clearing current bets
+      const handleClearBets = () => {
+        if (phase !== 'BETTING') return;
+        const totalRefund = bets.ACE + bets.JOKER;
+        if (totalRefund === 0) return;
+
+        const currentBal = (window.PK96 && typeof window.PK96.getBalance === 'function')
+          ? window.PK96.getBalance()
+          : balance;
+        const next = currentBal + totalRefund;
+        setBalance(next);
+        try {
+          if (window.PK96 && typeof window.PK96.setBalance === 'function') {
+            window.PK96.setBalance(next, false);
+          }
+        } catch(e) {}
+
+        setBets({ ACE: 0, JOKER: 0 });
+        setChipPlacements([]);
+        synth.playChip();
+        setStatusMessage("Cleared all bets.");
+        setStatusColor("text-amber-400");
+      };
+
+      // Repeating previous bets
+      const handleRepeatBets = () => {
+        if (phase !== 'BETTING') return;
+        const totalBet = previousBets.ACE + previousBets.JOKER;
+        if (totalBet === 0) {
+          setStatusMessage("No previous bets to repeat!");
+          setStatusColor("text-amber-400");
+          return;
+        }
+
+        const currentBal = (window.PK96 && typeof window.PK96.getBalance === 'function')
+          ? window.PK96.getBalance()
+          : balance;
+
+        const currentRefund = bets.ACE + bets.JOKER;
+        let runningBalance = currentBal + currentRefund;
+
+        if (runningBalance < totalBet) {
+          setStatusMessage("Insufficient balance to repeat previous bets!");
+          setStatusColor("text-red-400");
+          if (window.parent && window.parent !== window && typeof window.parent.showDepositModal === 'function') {
+            window.parent.showDepositModal();
+          }
+          return;
+        }
+
+        runningBalance -= totalBet;
+        setBalance(runningBalance);
+        try {
+          if (window.PK96 && typeof window.PK96.recordBet === 'function') {
+            window.PK96.recordBet(totalBet);
+          }
+          if (window.PK96 && typeof window.PK96.setBalance === 'function') {
+            window.PK96.setBalance(runningBalance, false);
+          }
+        } catch(e) {}
+
+        // Set bets
+        setBets(previousBets);
+
+        // Generate stacked placement chips visual overlay
+        const newPlacements = [];
+        ['ACE', 'JOKER'].forEach(opt => {
+          let remainder = previousBets[opt];
+          if (remainder <= 0) return;
+
+          // Split chips logically
+          const denom = [1000, 100, 50, 10, 1];
+          denom.forEach(val => {
+            const qty = Math.floor(remainder / val);
+            for (let q = 0; q < qty; q++) {
+              newPlacements.push({
+                id: `chip-repeat-${val}-${Date.now()}-${Math.random()}`,
+                option: opt,
+                value: val,
+                x: 25 + Math.random() * 50,
+                y: 35 + Math.random() * 40
+              });
+              remainder -= val;
+            }
+          });
+        });
+
+        setChipPlacements(newPlacements);
+        synth.playShuffle();
+        setStatusMessage("Repeated previous round's bets!");
+        setStatusColor("text-emerald-400");
+      };
+
+      // Reloading Bankroll / Deposit
+      const handleRebuy = () => {
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage('openDepositModal', '*');
+            window.parent.postMessage({ type: 'OPEN_DEPOSIT_MODAL' }, '*');
+            window.parent.postMessage({ type: 'OPEN_DEPOSIT' }, '*');
+          }
+        } catch(e) {}
+        if (window.parent && window.parent !== window && typeof window.parent.showDepositModal === 'function') {
+          window.parent.showDepositModal();
+        } else if (typeof window.showDepositModal === 'function') {
+          window.showDepositModal();
+        } else {
+          window.alert("Please deposit in the lobby to reload your balance.");
+        }
+      };
+
+      // Instantly dismiss results and proceed to the next betting round
+      const handleProceedToBetting = () => {
+        if (resetTimeoutRef.current) {
+          clearTimeout(resetTimeoutRef.current);
+          resetTimeoutRef.current = null;
+        }
+        setPhase('BETTING');
+        setWinner(null);
+        setLeftCard(null);
+        setRightCard(null);
+        setLeftFlipped(false);
+        setRightFlipped(false);
+        setBurnedSide(null);
+        setBets({ ACE: 0, JOKER: 0 });
+        setChipPlacements([]);
+        setWinPayout(null);
+        setRoundResult(null);
+        setStatusMessage("Place your bets on Ace or Joker, then click GO!");
+        setStatusColor("text-emerald-400");
+        synth.playShuffle();
+      };
+
+      // --- Go! Action Controller (New Game Loop with Burn Card Action) ---
+      const handleGo = () => {
+        if (phase !== 'BETTING') return;
+        const totalBet = bets.ACE + bets.JOKER;
+        if (totalBet === 0) {
+          setStatusMessage("Place a bet on ACE or JOKE first!");
+          setStatusColor("text-red-400");
+          return;
+        }
+
+        // Change phase and play shuffle sounds
+        setPhase('SHUFFLING');
+        setStatusMessage("Shuffling 2 cards with each other...");
+        setStatusColor("text-violet-400 font-bold");
+        synth.playShuffle();
+
+        setLeftCard(null);
+        setRightCard(null);
+        setLeftFlipped(false);
+        setRightFlipped(false);
+        setBurnedSide(null);
+        setWinner(null);
+        setWinPayout(null);
+        setRoundResult(null);
+
+        // Randomize burn side so it is completely unpredictable each round (50/50 chance for LEFT or RIGHT)
+        const burnLeft = Math.random() < 0.5;
+        setLastBurnSide(burnLeft ? 'LEFT' : 'RIGHT');
+
+        // Determine target winning card: player loses most of the time (~78% loss rate when betting on a single side),
+        // ensuring outcomes dynamically alternate and ACE does not appear too much.
+        const hasAceBet = bets.ACE > 0;
+        const hasJokerBet = bets.JOKER > 0;
+        let winningLabel = 'A';
+
+        if (hasAceBet && !hasJokerBet) {
+          // Player bet on ACE -> 22% win chance (ACE), 78% loss chance (Joker)
+          winningLabel = Math.random() < 0.22 ? 'A' : 'Joker';
+        } else if (hasJokerBet && !hasAceBet) {
+          // Player bet on JOKER -> 22% win chance (Joker), 78% loss chance (ACE)
+          winningLabel = Math.random() < 0.22 ? 'Joker' : 'A';
+        } else {
+          // Both or neither: balanced 50/50 split
+          winningLabel = Math.random() < 0.50 ? 'A' : 'Joker';
+        }
+
+        // Randomize suits so cards feel premium, dynamic and authentic
+        const redSuits = ['hearts', 'diamonds'];
+        const blackSuits = ['clubs', 'spades'];
+        const randomAceSuit = redSuits[Math.floor(Math.random() * redSuits.length)];
+        const randomJokerSuit = blackSuits[Math.floor(Math.random() * blackSuits.length)];
+
+        const aceCardObj = { label: 'A', suit: randomAceSuit };
+        const jokerCardObj = { label: 'Joker', suit: randomJokerSuit };
+
+        // Position the target winner on the unburned side
+        let lCard, rCard;
+        if (burnLeft) {
+          // Left is burned, Right is winning card
+          rCard = winningLabel === 'A' ? aceCardObj : jokerCardObj;
+          lCard = winningLabel === 'A' ? jokerCardObj : aceCardObj;
+        } else {
+          // Right is burned, Left is winning card
+          lCard = winningLabel === 'A' ? aceCardObj : jokerCardObj;
+          rCard = winningLabel === 'A' ? jokerCardObj : aceCardObj;
+        }
+
+        console.log(`[Round Setup] Left: ${lCard.label}, Right: ${rCard.label}, Burn Side: ${burnLeft ? 'LEFT' : 'RIGHT'}, Target Winner: ${winningLabel}`);
+
+        // 1. SHUFFLING ENDS -> DEAL TO SIDES WITH SMOOTH SWIPE AUDIO & SLIDEOUTS
+        setTimeout(() => {
+          setPhase('DEALING');
+          setStatusMessage("Placing cards on LEFT & RIGHT positions...");
+          setStatusColor("text-indigo-300 font-bold");
+          setLeftCard(lCard);
+          setRightCard(rCard);
+          synth.playCardSlide(0, 0.45);
+        }, 2400);
+
+        // 2. CHOOSE WHICH CARD TO BURN & BEGIN BURNING
+        let sparkInterval;
+        setTimeout(() => {
+          setBurnedSide(burnLeft ? 'LEFT' : 'RIGHT');
+          setBurnCardBurning(true);
+          setStatusMessage(burnLeft ? "Burn card chosen: LEFT! Incinerating Left card..." : "Burn card chosen: RIGHT! Incinerating Right card...");
+          setStatusColor("text-red-500 font-black animate-pulse");
+          synth.playBurn();
+
+          // Spawn spark and flame particles over the chosen side's card
+          sparkInterval = setInterval(() => {
+            setFlameParticles(prev => {
+              const nextParticles = [
+                ...prev,
+                {
+                  id: `flame-${Date.now()}-${Math.random()}`,
+                  x: 20 + Math.random() * 60,
+                  y: 10 + Math.random() * 50,
+                  size: 6 + Math.random() * 12,
+                  delay: Math.random() * 0.15
+                }
+              ];
+              if (nextParticles.length > 25) {
+                return nextParticles.slice(10);
+              }
+              return nextParticles;
+            });
+          }, 80);
+        }, 4200);
+
+        // 3. BURN COMPLETED: DISINTEGRATE THE BURNED CARD
+        setTimeout(() => {
+          clearInterval(sparkInterval);
+          setBurnCardBurning(false);
+          setFlameParticles([]);
+
+          if (burnLeft) {
+            setLeftCard(null);
+          } else {
+            setRightCard(null);
+          }
+
+          setStatusMessage(burnLeft ? "Left card burned! Flipping the RIGHT card..." : "Right card burned! Flipping the LEFT card...");
+          setStatusColor("text-amber-400 font-bold");
+          synth.playCardFlip();
+        }, 5800);
+
+        // 4. FLIP AND REVEAL THE WINNING CARD
+        setTimeout(() => {
+          if (burnLeft) {
+            setRightFlipped(true);
+          } else {
+            setLeftFlipped(true);
+          }
+          synth.playCardFlip();
+          setStatusMessage("Revealing the winning card...");
+          setStatusColor("text-yellow-300 font-bold");
+        }, 6600);
+
+        // 5. EVALUATE RESULT
+        setTimeout(() => {
+          const winningCard = burnLeft ? rCard : lCard;
+          const winOption = winningCard.label === 'A' ? 'ACE' : 'JOKER';
+          const cardLabel = winningCard.label;
+          setWinner(winOption);
+          setPhase('RESULT');
+
+          const userWon = bets[winOption] > 0;
+          const payout = userWon ? bets[winOption] * 1.9 : 0;
+
+          setRoundResult({
+            isWin: userWon,
+            amount: payout,
+            option: winOption
+          });
+
+          if (userWon) {
+            const current = (window.PK96 && typeof window.PK96.getBalance === 'function')
+              ? window.PK96.getBalance()
+              : balance;
+            const next = Math.round((current + payout) * 100) / 100;
+            setBalance(next);
+            try {
+              if (window.PK96 && typeof window.PK96.setBalance === 'function') {
+                window.PK96.setBalance(next, false);
+              }
+            } catch(e) {}
+
+            setWinPayout({ amount: payout });
+            synth.playWin();
+            triggerConfetti();
+
+            setStatusMessage(`Win! Revealed ${winOption === 'ACE' ? 'ACE' : 'JOKER'} card! (+ ${payout.toLocaleString()})`);
+            setStatusColor("text-yellow-400 font-black tracking-wide");
+          } else {
+            synth.playLose();
+            setStatusMessage(`Lost! Revealed ${winOption === 'ACE' ? 'ACE' : 'JOKER'} card.`);
+            setStatusColor("text-red-400 font-bold");
+          }
+
+          // Record history roadmap (for stats tracking)
+          const newRound = {
+            roundId: history.length + 101,
+            winner: winOption,
+            cardLabel: cardLabel,
+            timestamp: new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
+          };
+
+          const updatedHistory = [...history, newRound];
+          setHistory(updatedHistory);
+          localStorage.setItem('casino_history', JSON.stringify(updatedHistory));
+
+          // Remember bets for REPEAT button
+          setPreviousBets(bets);
+        }, 7400);
+
+        // 6. REST & RESET FOR NEW ROUND
+        resetTimeoutRef.current = setTimeout(() => {
+          setPhase('BETTING');
+          setWinner(null);
+          setLeftCard(null);
+          setRightCard(null);
+          setLeftFlipped(false);
+          setRightFlipped(false);
+          setBurnedSide(null);
+          setBets({ ACE: 0, JOKER: 0 });
+          setChipPlacements([]);
+          setWinPayout(null);
+          setRoundResult(null);
+          setStatusMessage("Place your bets on Ace or Joker, then click GO!");
+          setStatusColor("text-emerald-400");
+          synth.playShuffle();
+        }, 12000);
+      };
+
+      return (
+        <div className="h-screen h-[100dvh] max-h-[100dvh] w-screen text-slate-100 flex flex-col font-sans relative overflow-hidden selection:bg-amber-500/30 select-none" id="casino-app-root">
+          
+          {/* Confetti canvas animation */}
+          <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
+            {confetti.map(p => (
+              <div 
+                key={p.id}
+                className="confetti-particle rounded-sm"
+                style={{
+                  left: `${p.x}%`,
+                  top: `${p.y}px`,
+                  width: `${p.size}px`,
+                  height: `${p.size * 1.5}px`,
+                  backgroundColor: p.color,
+                  animationDelay: `${p.delay}s`,
+                  animationDuration: `${p.duration}s`
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Majestic Animated Galaxy Background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" id="galaxy-bg">
+            <div className="absolute inset-0 bg-[#070103]"></div>
+            <div className="absolute w-[180%] h-[180%] -top-[40%] -left-[40%] rounded-full opacity-25 filter blur-[100px] twinkle-slow" style={{ background: 'radial-gradient(circle, rgba(239,68,68,0.15) 0%, rgba(185,28,28,0.05) 40%, transparent 80%)' }}></div>
+            <div className="absolute w-[130%] h-[130%] -top-[10%] left-[-20%] rounded-full opacity-20 filter blur-[120px] twinkle-fast" style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.12) 0%, rgba(217,119,6,0.04) 50%, transparent 80%)' }}></div>
+          </div>
+
+          {/* Premium UI Main layout Container */}
+          <div className="w-full h-full flex flex-col justify-between z-10 relative">
+            
+            {/* Header section */}
+            <header className="bg-[#140103]/90 border-b border-[#b1892d]/40 px-3 py-1 flex items-center justify-between z-40 backdrop-blur-md relative" id="header-bar">
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={() => {
+                    try {
+                      if (window.parent && window.parent !== window) {
+                        window.parent.postMessage('backToLobby', '*');
+                        window.parent.postMessage({ type: 'PK96_CLOSE_GAME' }, '*');
+                        if (typeof window.parent.switchPage === 'function') {
+                          window.parent.switchPage('home');
+                        }
+                        const backBtn = window.parent.document.getElementById('gamePageBackBtn');
+                        if (backBtn) { backBtn.click(); return; }
+                      }
+                    } catch(e) {}
+                    window.location.href = '/';
+                  }}
+                  className="w-7 h-7 rounded-full bg-gradient-to-b from-[#240609] to-[#0a0001] border border-[#b1892d]/80 hover:border-[#ffe873] text-[#ffe39c] flex items-center justify-center transition-all shadow-md active:scale-95 mr-0.5"
+                  title="Back to Lobby"
+                  id="back-lobby-btn"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-[#ffe39c]">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                  </svg>
+                </button>
+                <div className="bg-gradient-to-r from-[#b1892d] to-[#ffe39c] p-0.5 rounded-full text-slate-950 font-black shadow-[0_0_8px_rgba(177,137,45,0.3)] border border-[#ffe39c]/40">
+                  <i data-lucide="crown" className="w-3.5 h-3.5"></i>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-serif font-black tracking-wider bg-gradient-to-r from-[#ffe49c] via-[#f59e0b] to-[#ffe49c] bg-clip-text text-transparent drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] uppercase leading-none">ACE VS JOKER</span>
+                </div>
+              </div>
+
+              {/* Status banner in middle */}
+              <div className="hidden md:flex items-center gap-1 bg-[#1a0104]/90 px-2 py-0.5 rounded-full border border-[#b1892d]/30 shadow-inner">
+                <div className={`w-1 h-1 rounded-full ${phase === 'BETTING' ? 'bg-emerald-500 animate-ping' : phase === 'SHUFFLING' ? 'bg-amber-400 animate-pulse' : 'bg-indigo-500'}`}></div>
+                <span className="text-[8px] font-bold tracking-wider font-mono text-[#ffe39c] uppercase leading-none">
+                  {phase === 'BETTING' ? 'PLACE YOUR BETS' : phase === 'SHUFFLING' ? 'SHUFFLING...' : phase === 'DEALING' ? 'DEALING CARD...' : 'ROUND RESULTS'}
+                </span>
+              </div>
+
+              {/* Header Right controllers */}
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={() => setSoundEnabled(!soundEnabled)} 
+                  className="w-7 h-7 rounded-full bg-gradient-to-b from-[#240609] to-[#0a0001] border border-[#b1892d]/80 hover:border-[#ffe873] text-[#ffe39c] flex items-center justify-center transition-all shadow-md active:scale-95"
+                  title="Toggle Sound FX"
+                  id="mute-sound-btn"
+                >
+                  <i data-lucide={soundEnabled ? "volume-2" : "volume-x"} className="w-3 h-3"></i>
+                </button>
+              </div>
+            </header>
+
+            {/* Notification ticker banner */}
+            <div className="bg-[#1c0205]/95 border-b border-[#ffe48f]/10 px-4 py-0.5 flex justify-center items-center gap-1 text-center text-[10px] font-semibold tracking-wider backdrop-blur-sm z-30 relative" id="notification-banner">
+              <i data-lucide="sparkles" className="w-2.5 h-2.5 text-yellow-400 animate-pulse"></i>
+              <span className={statusColor} id="status-message-text">{statusMessage}</span>
+            </div>
+
+            {/* Velvetfelt Card Stage center */}
+            <main className="flex-1 w-full mx-auto p-2 sm:p-3 flex flex-col gap-2 items-center justify-center relative min-h-0 z-10" id="main-stage">
+              <div className="w-full flex flex-col items-center justify-center gap-2 sm:gap-3">
+                
+                {/* Velvetfelt stage table container */}
+                <div className="w-full max-w-2xl flex flex-col relative rounded-2xl overflow-hidden shadow-2xl border-2 border-[#b1892d] bg-[#210205] h-40 sm:h-48 justify-center" id="cards-stage-area">
+                  <div className="absolute inset-0 velvet-felt opacity-95"></div>
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.05),transparent_75%)]"></div>
+
+                  <div className="relative z-10 flex items-center justify-around px-6 sm:px-10 w-full gap-4">
+                    
+                    {/* Left Card Slot */}
+                    <div className="flex flex-col items-center relative w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36" id="left-card-slot">
+                      {leftCard ? (
+                        <div className={`relative transition-all duration-300 ${burnedSide === 'LEFT' && burnCardBurning ? 'burning-card' : 'deal-slide-left'}`}>
+                          <PlayingCard card={leftCard} flipped={leftFlipped} isWinning={winner === 'ACE'} />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36 border-2 border-dashed border-[#ffe48f]/10 rounded-xl flex items-center justify-center bg-[#0d0102]/65 text-slate-600/45 font-mono text-[9px] uppercase tracking-widest shadow-inner">
+                          {burnedSide === 'LEFT' ? 'BURNED' : 'EMPTY'}
+                        </div>
+                      )}
+
+                      {/* Render Flame Particles for Left Slot */}
+                      {burnedSide === 'LEFT' && flameParticles.map(p => (
+                        <div 
+                          key={p.id}
+                          className="flame-particle"
+                          style={{
+                            left: `${p.x}%`,
+                            top: `${p.y}%`,
+                            width: `${p.size}px`,
+                            height: `${p.size}px`,
+                            animationDelay: `${p.delay}s`
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Central Royal Deck Pile (Dealers Shoe) */}
+                    <div className="flex flex-col items-center justify-center relative z-20 w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36" id="center-deck-pile">
+                      <div className="relative w-12 h-18 sm:w-16 sm:h-22 md:w-20 md:h-28">
+                        {/* 3D stacked deck offsets */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#ffe07a] via-[#c78e1b] to-[#593d05] border border-[#fff0b3]/40 rounded-xl translate-y-[3px] translate-x-[3px] shadow-sm opacity-30"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#ffe07a] via-[#c78e1b] to-[#593d05] border border-[#fff0b3]/60 rounded-xl translate-y-[1.5px] translate-x-[1.5px] shadow-sm opacity-60"></div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#ffe07a] via-[#c78e1b] to-[#593d05] border-2 border-[#fff0b3]/90 rounded-xl flex flex-col justify-between p-1 shadow-md">
+                          <div className="absolute inset-0.5 border border-[#ffeb99]/25 rounded-lg pointer-events-none"></div>
+                          <div className="text-[4px] text-[#ffeb99]/90 font-serif font-black tracking-widest text-center leading-none mt-1">★ ROYAL ★</div>
+                          <div className="flex-1 flex items-center justify-center my-0.5">
+                            <div className="w-8 h-12 border border-[#ffeb99]/30 rounded bg-gradient-to-b from-[#590409] to-[#120002] flex flex-col items-center justify-center relative shadow-inner">
+                              <span className="text-[8px] text-[#f3c051]">★</span>
+                            </div>
+                          </div>
+                          <div className="text-[4px] text-[#ffeb99]/90 font-serif font-black tracking-widest text-center leading-none mb-1">★ DECK ★</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Shuffle Animation Center Overlay (Hovered over the Central Pile) */}
+                    {phase === 'SHUFFLING' && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+                        <div className="relative flex items-center justify-center w-48 h-36">
+                          {/* Shuffling Card 1 */}
+                          <div className="absolute shuffling-left-anim">
+                            <div className="w-12 h-18 sm:w-16 sm:h-22 md:w-20 md:h-28 rounded-xl bg-gradient-to-br from-[#ffe07a] via-[#c78e1b] to-[#593d05] border-2 border-[#fff0b3] p-1 flex flex-col justify-between shadow-2xl">
+                              <div className="absolute inset-0.5 border border-[#ffeb99]/30 rounded-lg pointer-events-none"></div>
+                              <div className="text-[4px] text-[#ffeb99] font-serif font-black tracking-widest text-center leading-none">★ ROYAL ★</div>
+                              <div className="flex-1 flex items-center justify-center">
+                                <span className="text-amber-400 text-[10px] font-serif">♣</span>
+                              </div>
+                              <div className="text-[4px] text-[#ffeb99] font-serif font-black tracking-widest text-center leading-none">★ DECK ★</div>
+                            </div>
+                          </div>
+                          {/* Shuffling Card 2 */}
+                          <div className="absolute shuffling-right-anim">
+                            <div className="w-12 h-18 sm:w-16 sm:h-22 md:w-20 md:h-28 rounded-xl bg-gradient-to-br from-[#ffe07a] via-[#c78e1b] to-[#593d05] border-2 border-[#fff0b3] p-1 flex flex-col justify-between shadow-2xl">
+                              <div className="absolute inset-0.5 border border-[#ffeb99]/30 rounded-lg pointer-events-none"></div>
+                              <div className="text-[4px] text-[#ffeb99] font-serif font-black tracking-widest text-center leading-none">★ ROYAL ★</div>
+                              <div className="flex-1 flex items-center justify-center">
+                                <span className="text-amber-400 text-[10px] font-serif">♦</span>
+                              </div>
+                              <div className="text-[4px] text-[#ffeb99] font-serif font-black tracking-widest text-center leading-none">★ DECK ★</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Right Card Slot */}
+                    <div className="flex flex-col items-center relative w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36" id="right-card-slot">
+                      {rightCard ? (
+                        <div className={`relative transition-all duration-300 ${burnedSide === 'RIGHT' && burnCardBurning ? 'burning-card' : 'deal-slide-right'}`}>
+                          <PlayingCard card={rightCard} flipped={rightFlipped} isWinning={winner === 'JOKER'} />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-24 sm:w-20 sm:h-28 md:w-24 md:h-36 border-2 border-dashed border-[#ffe48f]/10 rounded-xl flex items-center justify-center bg-[#0d0102]/65 text-slate-600/45 font-mono text-[9px] uppercase tracking-widest shadow-inner">
+                          {burnedSide === 'RIGHT' ? 'BURNED' : 'EMPTY'}
+                        </div>
+                      )}
+
+                      {/* Render Flame Particles for Right Slot */}
+                      {burnedSide === 'RIGHT' && flameParticles.map(p => (
+                        <div 
+                          key={p.id}
+                          className="flame-particle"
+                          style={{
+                            left: `${p.x}%`,
+                            top: `${p.y}%`,
+                            width: `${p.size}px`,
+                            height: `${p.size}px`,
+                            animationDelay: `${p.delay}s`
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* Interactive Betting Area */}
+                <BettingTable 
+                  phase={phase} 
+                  bets={bets} 
+                  placements={chipPlacements} 
+                  onPlaceBet={handlePlaceBet}
+                  isWinningOption={winner} 
+                />
+
+              </div>
+            </main>
+
+            {/* Bottom Controls / Tray Bar */}
+            <footer className="bg-gradient-to-r from-[#0d0102] via-[#240306] to-[#0d0102] border-t border-[#b1892d]/40 p-1.5 px-3 z-40 shadow-[0_-8px_20px_rgba(0,0,0,0.6)]" id="footer-controls">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-2 items-center justify-between">
+                
+                {/* On mobile: row containing Balance & Chip Selection; on desktop: flow with other columns */}
+                <div className="flex items-center justify-between w-full md:w-auto gap-3 shrink-0">
+                  {/* Balance / Reload bankroll section */}
+                  <div className="flex items-center gap-2 bg-[#1a0103] p-1 px-3 rounded-full border border-[#b1892d]/50 shadow-sm" id="balance-panel">
+                    <div className="min-w-[80px]">
+                      <div className="text-[7px] font-bold text-[#ffe39c]/60 uppercase tracking-widest leading-none">Balance</div>
+                      <div className="text-xs font-extrabold text-yellow-400 font-mono mt-0.5 flex items-center gap-1 leading-none" id="balanceDisplay">
+                        <SolidGoldCoin className="w-4 h-4" />
+                        {balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </div>
+                    </div>
+                    {balance < 1 && (
+                      <button 
+                        onClick={handleRebuy} 
+                        className="px-2 py-0.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-600 hover:to-amber-700 text-slate-950 font-black text-[8px] rounded-full border border-yellow-300 uppercase tracking-wider shadow-lg active:scale-95 transition-transform shrink-0 leading-none"
+                        id="rebuy-action-btn"
+                      >
+                        Deposit
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Choose Chip Area */}
+                  <div className="flex items-center gap-1 bg-[#0c0001] px-2 py-0.5 rounded-full border border-[#ffe48f]/10 shadow-lg relative" id="chip-choice-panel">
+                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[5px] font-bold tracking-widest text-[#ffe39c] uppercase px-1 bg-[#0c0001] border border-[#b1892d]/40 rounded-full leading-none py-0.5 shadow-sm">
+                      Chip
+                    </div>
+                    {[1, 10, 50, 100, 1000].map(val => {
+                      const isSelected = selectedChip === val;
+                      return (
+                        <button 
+                          key={`select-chip-${val}`}
+                          onClick={() => {
+                            setSelectedChip(val);
+                            synth.playChip();
+                          }}
+                          className={`relative p-0.5 rounded-full transition-all duration-150 ${
+                            isSelected 
+                              ? 'ring-2 ring-yellow-400 scale-105 shadow-[0_0_8px_rgba(250,204,21,0.6)] z-10' 
+                              : 'opacity-70 hover:opacity-100 hover:scale-102'
+                          }`}
+                          id={`chip-selector-button-${val}`}
+                        >
+                          <div className="w-6 h-6 flex items-center justify-center">
+                            <PokerChip value={val} size="sm" animated={false} />
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Action Buttons: REPEAT, CLEAR, GO (Big in length/width on mobile, neat on desktop) */}
+                <div className="flex items-center gap-1.5 w-full md:w-auto" id="action-buttons-group">
+                  <button 
+                    onClick={handleClearBets}
+                    disabled={phase !== 'BETTING' || (bets.ACE === 0 && bets.JOKER === 0)}
+                    className={`flex-1 md:flex-none px-4 py-2 md:py-1 rounded text-[10px] font-black uppercase tracking-wider border transition-all text-center ${
+                      phase === 'BETTING' && (bets.ACE > 0 || bets.JOKER > 0)
+                        ? 'bg-gradient-to-b from-stone-900 to-black hover:border-red-500/50 hover:text-red-400 border-stone-800 text-slate-300 cursor-pointer active:scale-95 shadow-sm'
+                        : 'bg-zinc-950 text-zinc-600 border-zinc-900 cursor-not-allowed shadow-none'
+                    }`}
+                    title="Clear current placed bets"
+                    id="clear-bets-action-btn"
+                  >
+                    CLEAR
+                  </button>
+
+                  <button 
+                    onClick={handleRepeatBets}
+                    disabled={phase !== 'BETTING'}
+                    className={`flex-1 md:flex-none px-4 py-2 md:py-1 rounded text-[10px] font-black uppercase tracking-wider border transition-all text-center ${
+                      phase === 'BETTING'
+                        ? 'bg-gradient-to-b from-[#2a0408] to-[#0a0001] hover:border-red-500/50 hover:text-red-300 border-[#ffe48f]/10 text-slate-300 cursor-pointer active:scale-95 shadow-sm'
+                        : 'bg-zinc-950 text-zinc-600 border-zinc-900 cursor-not-allowed shadow-none'
+                    }`}
+                    title="Repeat bets from previous round"
+                    id="repeat-bets-action-btn"
+                  >
+                    REPEAT
+                  </button>
+
+                  {/* GO / DEAL BUTTON */}
+                  <button 
+                    onClick={handleGo}
+                    disabled={phase !== 'BETTING' || (bets.ACE === 0 && bets.JOKER === 0)}
+                    className={`flex-[2] md:flex-none px-8 py-2.5 md:py-1.5 rounded text-xs font-black uppercase tracking-widest border transition-all text-center shadow-[0_2px_8px_rgba(0,0,0,0.5)] ${
+                      phase === 'BETTING' && (bets.ACE > 0 || bets.JOKER > 0)
+                        ? 'bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 border-yellow-300 cursor-pointer active:scale-95 pulse-glow-gold'
+                        : 'bg-zinc-900 text-zinc-500 border-zinc-800 cursor-not-allowed shadow-none'
+                    }`}
+                    id="go-start-round-btn"
+                  >
+                    GO
+                  </button>
+                </div>
+
+              </div>
+            </footer>
+
+          </div>
+
+          {/* Help Rules Overlay */}
+          <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+
+          {/* Beautiful interactive result popup */}
+          {phase === 'RESULT' && roundResult && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm animate-fade-in" id="result-modal-container">
+              <div 
+                className={`relative w-full max-w-xs bg-gradient-to-b ${
+                  roundResult.isWin 
+                    ? 'from-[#2e2300] to-slate-950 border-yellow-400/80 shadow-[0_0_50px_rgba(234,179,8,0.4)]' 
+                    : 'from-[#230c0c] to-slate-950 border-red-500/50 shadow-[0_0_50px_rgba(239,68,68,0.25)]'
+                } border-2 rounded-2xl p-6 text-center animate-scale-up`}
+                id="result-modal-box"
+              >
+                {roundResult.isWin && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-yellow-500/15 rounded-full blur-2xl -z-10"></div>
+                )}
+                
+                <div className="mb-4">
+                  {roundResult.isWin ? (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 flex items-center justify-center mx-auto border-2 border-yellow-200 shadow-lg animate-pulse">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-yellow-950">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                        <path d="M4 22h16" />
+                        <path d="M10 14.66V17c0 .55-.45 1-1 1H7" />
+                        <path d="M14 14.66V17c0 .55.45 1 1 1h2" />
+                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                      </svg>
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-rose-600 flex items-center justify-center mx-auto border-2 border-red-400 shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6 text-white">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="m15 9-6 6" />
+                        <path d="m9 9 6 6" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+
+                <h3 className={`text-2xl font-black tracking-widest font-serif mb-2 ${roundResult.isWin ? 'text-yellow-400 animate-pulse' : 'text-red-400'}`}>
+                  {roundResult.isWin ? 'YOU WIN!' : 'YOU LOSE!'}
+                </h3>
+
+                <p className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-4 leading-relaxed">
+                  {roundResult.isWin 
+                    ? `Revealed ${roundResult.option} and won!` 
+                    : `Revealed ${roundResult.option} and lost.`
+                  }
+                </p>
+
+                {roundResult.isWin && (
+                  <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl py-3 px-4 mb-6">
+                    <span className="text-[9px] font-bold text-yellow-400/60 uppercase tracking-widest block mb-1">WINNINGS</span>
+                    <span className="text-3xl font-black font-mono text-white tracking-tight">
+                      +{roundResult.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleProceedToBetting}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${
+                    roundResult.isWin 
+                      ? 'bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600 text-slate-950 border border-yellow-300 hover:scale-102 active:scale-98 shadow-md' 
+                      : 'bg-stone-800 hover:bg-stone-700 text-white border border-stone-700 hover:scale-102 active:scale-98'
+                  }`}
+                  id="result-modal-continue-btn"
+                >
+                  CONTINUE
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+    // Render App Component to mount target
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  
+  </script>
+</body>
+</html>

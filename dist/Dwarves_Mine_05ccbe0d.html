@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dwarves Mine - PK96</title>
+  <base href="https://cdn.all-scripts.de/demos/dwarves-mine/">
+  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+  <link rel="shortcut icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+  <link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    @font-face {
+      font-family: "Upcfb";
+      src: url("fonts/upcfb.ttf");
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-container {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+    }
+  </style>
+
+  <script src="/pk96-balance.js"></script>
+
+  <script>
+    const langcode = 'en';
+    const resolution = 'middle';
+
+    function getPK96LobbyBalance() {
+      if (window.PK96 && typeof window.PK96.getBalance === 'function') {
+        return window.PK96.getBalance();
+      }
+      try {
+        if (window.parent && window.parent !== window && window.parent.PK96 && typeof window.parent.PK96.getBalance === 'function') {
+          return window.parent.PK96.getBalance();
+        }
+      } catch(e) {}
+      const val = localStorage.getItem('pk96_balance');
+      return (val !== null && !isNaN(Number(val))) ? Number(val) : 0;
+    }
+
+    const origFetch = window.fetch;
+    window.fetch = async function(url, options) {
+      const urlStr = (typeof url === 'string') ? url : (url && url.url ? url.url : '');
+      if (urlStr.includes('remote.php')) {
+        const fullUrl = urlStr.startsWith('http') ? urlStr : ('https://cdn.all-scripts.de/demos/dwarves-mine/' + urlStr);
+        const res = await origFetch.call(this, fullUrl, options);
+        const json = await res.json();
+        const curBal = getPK96LobbyBalance();
+
+        if (json.userBalance !== undefined) {
+          json.userBalance = curBal;
+        }
+
+        if (json.userBalanceBefore !== undefined) {
+          const betAmt = (window.app && window.app.settings && window.app.settings.bet) ? window.app.settings.bet : 10;
+          if (curBal < betAmt || curBal <= 0) {
+            try {
+              if (window.parent && window.parent !== window && window.parent.showLobbyToast) {
+                window.parent.showLobbyToast("Insufficient balance! Please deposit to play.");
+                window.parent.postMessage('openDepositModal', '*');
+              }
+            } catch(e) {}
+          }
+          const winAmt = json.winnings || 0;
+          const nextBal = Math.max(0, Math.round((curBal - betAmt + winAmt) * 100) / 100);
+          json.userBalanceBefore = curBal;
+          json.userBalanceAfter = nextBal;
+
+          if (window.PK96) {
+            if (typeof window.PK96.recordBet === 'function') window.PK96.recordBet(betAmt);
+            if (typeof window.PK96.setBalance === 'function') window.PK96.setBalance(nextBal, true);
+          } else {
+            localStorage.setItem('pk96_balance', nextBal.toString());
+          }
+
+          try {
+            if (window.parent && window.parent !== window) {
+              window.parent.postMessage({ type: 'PK96_BALANCE_UPDATE', balance: nextBal, addedBet: betAmt }, '*');
+            }
+          } catch(e) {}
+        }
+
+        return new Response(JSON.stringify(json), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      return origFetch.apply(this, arguments);
+    };
+
+    function syncNativeGameBalance(bal) {
+      const b = (typeof bal === 'number') ? bal : getPK96LobbyBalance();
+      if (window.app && window.app.fields && window.app.fields.balance) {
+        window.app.fields.balance.text = Number(b).toFixed(2);
+      }
+    }
+
+    window.addEventListener('pk96_balance_changed', (e) => {
+      syncNativeGameBalance(e.detail ? e.detail.balance : undefined);
+    });
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'pk96_balance' || e.key === 'pk96_logged_user' || e.key === 'pk96_guest_balance') {
+        syncNativeGameBalance();
+      }
+    });
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'PK96_BALANCE_UPDATE' && typeof e.data.balance === 'number') {
+        syncNativeGameBalance(e.data.balance);
+      }
+    });
+    setInterval(syncNativeGameBalance, 1200);
+  </script>
+</head>
+<body>
+  <div id="game-container"></div>
+  <script src="js/phaser.min.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/reel_animation.js"></script>
+</body>
+</html>

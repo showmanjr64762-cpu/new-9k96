@@ -1,0 +1,109 @@
+{
+  "ref_sUOZRsZBRZSHRHhcamcWyEaPEiC2_2bEWvxYRE6R8xhuH3zDQfUegWeC2": {
+    "id": "ref_sUOZRsZBRZSHRHhcamcWyEaPEiC2_2bEWvxYRE6R8xhuH3zDQfUegWeC2",
+    "referrer_id": "sUOZRsZBRZSHRHhcamcWyEaPEiC2",
+    "referrer_email": "zx@gmail.com",
+    "referred_user_id": "2bEWvxYRE6R8xhuH3zDQfUegWeC2",
+    "referred_email": "gh@gmail.com",
+    "referral_code": "100001193",
+    "status": "REGISTERED",
+    "total_deposit": 0,
+    "qualifying_bet_volume": 0,
+    "created_at": "2026-09-10T23:33:43.113Z",
+    "qualified_at": null
+  },
+  "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref1": {
+    "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref1",
+    "referrer_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "referrer_email": "asd@gmail.com",
+    "referred_user_id": "usr_ref1_1041",
+    "referred_email": "player1@gmail.com",
+    "referral_code": "100001263",
+    "status": "VALID",
+    "total_deposit": 1500,
+    "qualifying_bet_volume": 12000,
+    "created_at": "2026-09-11T10:00:00.000Z",
+    "qualified_at": "2026-09-11T10:05:00.000Z"
+  },
+  "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref2": {
+    "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref2",
+    "referrer_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "referrer_email": "asd@gmail.com",
+    "referred_user_id": "usr_ref2_1042",
+    "referred_email": "player2@gmail.com",
+    "referral_code": "100001263",
+    "status": "VALID",
+    "total_deposit": 3000,
+    "qualifying_bet_volume": 25000,
+    "created_at": "2026-09-11T10:15:00.000Z",
+    "qualified_at": "2026-09-11T10:20:00.000Z"
+  },
+  "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref3": {
+    "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref3",
+    "referrer_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "referrer_email": "asd@gmail.com",
+    "referred_user_id": "usr_ref3_1043",
+    "referred_email": "player3@gmail.com",
+    "referral_code": "100001263",
+    "status": "VALID",
+    "total_deposit": 5000,
+    "qualifying_bet_volume": 40000,
+    "created_at": "2026-09-11T10:30:00.000Z",
+    "qualified_at": "2026-09-11T10:35:00.000Z"
+  },
+  "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref4": {
+    "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref4",
+    "referrer_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "referrer_email": "asd@gmail.com",
+    "referred_user_id": "usr_ref4_1044",
+    "referred_email": "player4@gmail.com",
+    "referral_code": "100001263",
+    "status": "VALID",
+    "total_deposit": 1000,
+    "qualifying_bet_volume": 8000,
+    "created_at": "2026-09-11T11:00:00.000Z",
+    "qualified_at": "2026-09-11T11:05:00.000Z"
+  },
+  "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref5": {
+    "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref5",
+    "referrer_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "referrer_email": "asd@gmail.com",
+    "referred_user_id": "usr_ref5_1045",
+    "referred_email": "player5@gmail.com",
+    "referral_code": "100001263",
+    "status": "VALID",
+    "total_deposit": 2000,
+    "qualifying_bet_volume": 15000,
+    "created_at": "2026-09-11T11:30:00.000Z",
+    "qualified_at": "2026-09-11T11:35:00.000Z"
+  },
+  "ref_y3WX168SrzdCmml4h0XVCefgLFx1_ayR52KfhfmMsiERU4Jq1T14YIVy1": {
+    "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_ayR52KfhfmMsiERU4Jq1T14YIVy1",
+    "referrer_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "referrer_email": "asd@gmail.com",
+    "referred_user_id": "ayR52KfhfmMsiERU4Jq1T14YIVy1",
+    "referred_email": "asddd@gmail.com",
+    "referral_code": "100001263",
+    "status": "REGISTERED",
+    "total_deposit": 0,
+    "qualifying_bet_volume": 0,
+    "created_at": {
+      "nanoseconds": 256000000,
+      "seconds": 1789171035
+    },
+    "qualified_at": null
+  },
+  "ref_sUOZRsZBRZSHRHhcamcWyEaPEiC2_sUOZRsZBRZSHRHhcamcWyEaPEiC2": {
+    "id": "ref_sUOZRsZBRZSHRHhcamcWyEaPEiC2_sUOZRsZBRZSHRHhcamcWyEaPEiC2",
+    "referrer_id": "sUOZRsZBRZSHRHhcamcWyEaPEiC2",
+    "referrer_email": "zx@gmail.com",
+    "referred_user_id": "sUOZRsZBRZSHRHhcamcWyEaPEiC2",
+    "referred_email": "zx@gmail.com",
+    "referral_code": "100001193",
+    "status": "VALID",
+    "total_deposit": 2600,
+    "qualifying_bet_volume": 9194,
+    "created_at": "2026-09-10T20:45:08.880Z",
+    "qualified_at": "2026-10-25T07:55:44.319Z"
+  }
+}

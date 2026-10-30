@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profiles",
+      "description": "User accounts, balances, and stats",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "balance": { "type": "number" },
+        "favorites": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "balance"]
+    },
+    "game_logs": {
+      "title": "Game Activity Logs",
+      "description": "Records of played games and win/loss results",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "gameId": { "type": "string" },
+        "gameName": { "type": "string" },
+        "betAmount": { "type": "number" },
+        "payout": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "gameId", "timestamp"]
+    },
+    "referrals": {
+      "title": "Referral Relationships",
+      "description": "Tracks inviter and referred user linkage and status",
+      "type": "object",
+      "properties": {
+        "referCode": { "type": "string" },
+        "referredUid": { "type": "string" },
+        "referredEmail": { "type": "string" },
+        "totalDeposit": { "type": "number" },
+        "totalBets": { "type": "number" },
+        "isValid": { "type": "boolean" }
+      },
+      "required": ["referCode", "referredUid"]
+    },
+    "deposits": {
+      "title": "Deposit Requests",
+      "description": "Player deposit submissions pending or processed by admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "channel": { "type": "string" },
+        "transactionRef": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "processedAt": { "type": "string", "format": "date-time" },
+        "adminNote": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "status"]
+    },
+    "withdrawals": {
+      "title": "Withdrawal Requests",
+      "description": "Player withdrawal requests pending or processed by admin",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "amount": { "type": "number" },
+        "accountTitle": { "type": "string" },
+        "accountNumber": { "type": "string" },
+        "channel": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "REJECTED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "processedAt": { "type": "string", "format": "date-time" },
+        "adminNote": { "type": "string" }
+      },
+      "required": ["id", "userId", "amount", "status"]
+    },
+    "admin_messages": {
+      "title": "Game Activity Messages",
+      "description": "Live broadcast stream of game messages, bets, wins, and transactions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "message": { "type": "string" },
+        "details": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "message", "timestamp"]
+    },
+    "user_activities": {
+      "title": "User Account Activities",
+      "description": "Historical log of every user action including commissions, deposits, withdrawals, rewards, and gameplay",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "username": { "type": "string" },
+        "type": { "type": "string" },
+        "action": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "balance": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "type", "timestamp"]
+    }
+  }
+}

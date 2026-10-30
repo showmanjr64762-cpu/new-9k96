@@ -10680,8 +10680,8 @@
                 if (spinnerContainer) {
                     spinnerContainer.classList.add('active');
                 }
-                // Exactly 15 full seconds of roller loading after image load completes
-                splashTimer = setTimeout(dismissSplash, 15000);
+                // Keep the splash brief so lobby actions, including Deposit, become available promptly.
+                splashTimer = setTimeout(dismissSplash, 1500);
             }
 
             window.dismissStartupSplash = dismissSplash;

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+<link rel="shortcut icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+<script>
+        window.alert = function(msg) {
+          try {
+            if (window.parent && window.parent !== window && window.parent.showLobbyToast) {
+              window.parent.showLobbyToast(msg);
+              return;
+            }
+          } catch(e) {}
+          try {
+            let toast = document.createElement("div");
+            toast.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999999;background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.5);border:1px solid #38bdf8;pointer-events:none;font-family:sans-serif;";
+            toast.textContent = msg;
+            (document.body || document.documentElement).appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+          } catch(err) {
+            console.log("[ALERT]", msg);
+          }
+        };
+      </script>
+    <script src="./pk96-balance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Flappy Bird — Checkpoint Multiplier Arcade</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background: #0b2b3b;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, -apple-system, 'Press Start 2P', monospace;
+            touch-action: manipulation;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .fullscreen-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #0f2c3b, #06212e);
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #3e9fd7;
+            cursor: pointer;
+            box-shadow: 0 0 0 3px rgba(255,220,150,0.2);
+        }
+        @media (max-width: 600px) {
+            canvas { object-fit: cover; }
+        }
+        
+        /* Mute Button */
+        #muteBtn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000;
+            background: rgba(0,0,0,0.6);
+            border: 2px solid rgba(255,215,0,0.5);
+            color: #ffd966;
+            font-size: 28px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        #muteBtn:hover {
+            transform: scale(1.1);
+            background: rgba(0,0,0,0.8);
+            border-color: #ffd966;
+        }
+        #muteBtn:active {
+            transform: scale(0.95);
+        }
+        @media (max-width: 600px) {
+            #muteBtn {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 22px;
+            }
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, 'Segoe UI', monospace;
+        }
+        .bet-panel {
+            background: linear-gradient(145deg, #1f3e48, #0e2a32);
+            border-radius: 48px;
+            padding: 24px 20px 32px;
+            width: 85%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+            border: 1px solid #ffd966;
+        }
+        .bet-panel h2 {
+            color: #ffdf7e;
+            font-size: 28px;
+            margin-bottom: 6px;
+            text-shadow: 0 2px 0 #7a3c0a;
+        }
+        .balance-display {
+            background: #00000066;
+            border-radius: 60px;
+            padding: 8px 16px;
+            margin: 10px 0 18px;
+            font-weight: bold;
+            font-size: 20px;
+            color: #f9e45b;
+            display: inline-block;
+        }
+        .bet-buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin: 20px 0;
+        }
+        .bet-btn {
+            background: #2b4f3b;
+            border: none;
+            padding: 12px 0;
+            border-radius: 60px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #ffecb3;
+            box-shadow: 0 4px 0 #0f2a1c;
+            cursor: pointer;
+            transition: 0.05s linear;
+        }
+        .bet-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #0f2a1c; }
+        .confirm-btn {
+            background: #e67e22;
+            padding: 12px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 60px;
+            margin-top: 8px;
+            border: none;
+            color: white;
+            width: 80%;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #a8540a;
+        }
+        .confirm-btn:active { transform: translateY(2px); }
+        .info-text { font-size: 12px; color: #b9e6ff; margin-top: 15px; }
+        .action-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #1e2a2f;
+            border-radius: 48px;
+            padding: 24px 28px;
+            text-align: center;
+            z-index: 1100;
+            width: 300px;
+            border: 2px solid gold;
+            box-shadow: 0 20px 30px black;
+        }
+        .action-popup h3 { font-size: 28px; color: #facc15; margin-bottom: 8px; }
+        .checkpoint-label { font-size: 16px; color: #ffb347; margin-bottom: 5px; letter-spacing: 1px; }
+        .win-amount { font-size: 38px; font-weight: bold; color: #2dd4bf; margin: 10px 0; }
+        .action-btns { display: flex; gap: 20px; justify-content: center; margin: 20px 0 10px; }
+        .cashout-btn, .continue-btn {
+            border: none;
+            padding: 10px 20px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+        }
+        .cashout-btn { background: #10b981; color: white; box-shadow: 0 3px 0 #047857; }
+        .continue-btn { background: #f59e0b; color: #2c1a00; box-shadow: 0 3px 0 #b45309; }
+        .timer-text { font-size: 22px; background: black; padding: 6px 20px; border-radius: 60px; margin-top: 12px; color: #facc15; font-weight: bold; }
+        .hidden { display: none; }
+        .multiplier-badge { font-family: monospace; }
+    </style>
+</head>
+<body>
+<!-- MUTE BUTTON -->
+<button id="muteBtn" title="Toggle Sound">🔊</button>
+
+<div class="fullscreen-wrapper">
+    <canvas id="gameCanvas"></canvas>
+</div>
+
+<!-- BET POPUP -->
+<div id="betPopup" class="modal-overlay">
+    <div class="bet-panel">
+        <h2>🐦 FLAPPY CHECKPOINT</h2>
+        <div><span class="balance-display" id="balanceDisplay">💰 BAL: 0</span></div>
+        <div class="bet-buttons-grid">
+            <button class="bet-btn" data-bet="10">10</button>
+            <button class="bet-btn" data-bet="20">20</button>
+            <button class="bet-btn" data-bet="50">50</button>
+            <button class="bet-btn" data-bet="100">100</button>
+            <button class="bet-btn" data-bet="250">250</button>
+            <button class="bet-btn" data-bet="500">500</button>
+        </div>
+        <button id="confirmBetBtn" class="confirm-btn">✔ START FLYING</button>
+        <div class="info-text">✨ EVERY 7th PIPE = GOLDEN CHECKPOINT ✨<br>Pass it → Multiplier increases! Cashout or continue (3s countdown)</div>
+    </div>
+</div>
+
+<!-- MULTIPLIER CHECKPOINT POPUP -->
+<div id="actionPopup" class="action-popup hidden">
+    <h3>🏆 CHECKPOINT! 🏆</h3>
+    <div class="checkpoint-label">MULTIPLIER x</div>
+    <div id="multiplierValue" style="font-size: 42px; font-weight:bold; color:#ffd966;">1.4</div>
+    <div class="win-amount" id="popupWinAmount">0</div>
+    <div class="action-btns">
+        <button id="cashoutBtn" class="cashout-btn">💰 CASHOUT</button>
+        <button id="continueBtn" class="continue-btn">🔄 CONTINUE</button>
+    </div>
+    <div id="continueTimer" class="timer-text hidden">⏱️ 3s</div>
+</div>
+
+<script>
+    (function() {
+        // ==================== CANVAS SETUP ====================
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const VIRTUAL_WIDTH = 400;
+        const VIRTUAL_HEIGHT = 600;
+        let scale = 1, offsetX = 0, offsetY = 0;
+        
+        function updateCanvasScale() {
+            const container = canvas.parentElement;
+            const containerWidth = window.innerWidth;
+            const containerHeight = window.innerHeight;
+            const scaleX = containerWidth / VIRTUAL_WIDTH;
+            const scaleY = containerHeight / VIRTUAL_HEIGHT;
+            scale = Math.min(scaleX, scaleY);
+            const actualWidth = VIRTUAL_WIDTH * scale;
+            const actualHeight = VIRTUAL_HEIGHT * scale;
+            canvas.style.width = `${actualWidth}px`;
+            canvas.style.height = `${actualHeight}px`;
+            canvas.style.left = `${(containerWidth - actualWidth) / 2}px`;
+            canvas.style.top = `${(containerHeight - actualHeight) / 2}px`;
+            canvas.width = VIRTUAL_WIDTH;
+            canvas.height = VIRTUAL_HEIGHT;
+            offsetX = (containerWidth - actualWidth) / 2;
+            offsetY = (containerHeight - actualHeight) / 2;
+        }
+        
+        // ==================== SOUND ENGINE ====================
+        class SoundFX {
+            constructor() {
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                this.enabled = true;
+                this.muted = false;
+            }
+            
+            toggleMute() {
+                this.muted = !this.muted;
+                if (this.muted) {
+                    // Suspend audio context to save resources
+                    if (this.ctx && this.ctx.state === 'running') {
+                        this.ctx.suspend();
+                    }
+                } else {
+                    // Resume audio context
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                }
+                return this.muted;
+            }
+            
+            isMuted() {
+                return this.muted;
+            }
+            
+            playSound(soundFunc) {
+                if (this.muted) return;
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                soundFunc.call(this);
+            }
+            
+            jump() {
+                this.playSound(function() {
+                    try {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.type = 'square';
+                        osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.08);
+                        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+                        osc.start(this.ctx.currentTime);
+                        osc.stop(this.ctx.currentTime + 0.1);
+                    } catch(e) {}
+                });
+            }
+            
+            crash() {
+                this.playSound(function() {
+                    try {
+                        const bufferSize = this.ctx.sampleRate * 0.2;
+                        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                        const data = buffer.getChannelData(0);
+                        for (let i = 0; i < bufferSize; i++) {
+                            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (this.ctx.sampleRate * 0.1));
+                        }
+                        const noise = this.ctx.createBufferSource();
+                        noise.buffer = buffer;
+                        const gain = this.ctx.createGain();
+                        noise.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+                        noise.start(this.ctx.currentTime);
+                    } catch(e) {}
+                });
+            }
+            
+            checkpoint() {
+                this.playSound(function() {
+                    try {
+                        const notes = [523, 659, 784, 1047];
+                        notes.forEach((freq, i) => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.1);
+                            gain.gain.setValueAtTime(0.1, this.ctx.currentTime + i * 0.1);
+                            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.1 + 0.2);
+                            osc.start(this.ctx.currentTime + i * 0.1);
+                            osc.stop(this.ctx.currentTime + i * 0.1 + 0.2);
+                        });
+                    } catch(e) {}
+                });
+            }
+            
+            cashout() {
+                this.playSound(function() {
+                    try {
+                        const notes = [523, 659, 784, 1047, 1318];
+                        notes.forEach((freq, i) => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + i * 0.08);
+                            gain.gain.setValueAtTime(0.08, this.ctx.currentTime + i * 0.08);
+                            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + i * 0.08 + 0.15);
+                            osc.start(this.ctx.currentTime + i * 0.08);
+                            osc.stop(this.ctx.currentTime + i * 0.08 + 0.15);
+                        });
+                    } catch(e) {}
+                });
+            }
+            
+            flap() {
+                this.playSound(function() {
+                    try {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(900, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.04);
+                        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
+                        osc.start(this.ctx.currentTime);
+                        osc.stop(this.ctx.currentTime + 0.05);
+                    } catch(e) {}
+                });
+            }
+        }
+
+        const sound = new SoundFX();
+        
+        // Mute button handler
+        const muteBtn = document.getElementById('muteBtn');
+        muteBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const muted = sound.toggleMute();
+            this.textContent = muted ? '🔇' : '🔊';
+            this.style.color = muted ? '#ff6b6b' : '#ffd966';
+        });
+        
+        function resumeAudio() {
+            if (sound.ctx && sound.ctx.state === 'suspended' && !sound.isMuted()) {
+                sound.ctx.resume();
+            }
+        }
+        document.addEventListener('click', resumeAudio);
+        document.addEventListener('touchstart', resumeAudio, { passive: true });
+
+        // ==================== GAME CONFIG ====================
+        const GAME_CONFIG = {
+            width: VIRTUAL_WIDTH,
+            height: VIRTUAL_HEIGHT,
+            birdSize: 36,
+            birdX: 80,
+            startY: 250,
+            gravity: 0.5,
+            jumpForce: -8,
+            pipeSpeed: 3,
+            pipeWidth: 60,
+            pipeSpacing: 220,
+            gapSize: 150,
+            minGapY: 120,
+            maxGapY: 380,
+        };
+        
+        // ==================== BETTING & MULTIPLIER SYSTEM ====================
+        let playerBalance = (window.PK96 && typeof window.PK96.getBalance === 'function') 
+            ? window.PK96.getBalance() 
+            : parseFloat(localStorage.getItem('flappy_balance') || '0');
+        let currentBet = 0;
+        let activeGame = false;          
+        let gameState = 'start';         // 'start', 'playing', 'gameover', 'paused_multiplier'
+        let gamePaused = false;
+        let awaitingCheckpointPopup = false;
+        
+        const multiplierChain = [1.4, 1.6, 1.8, 2.0, 2.3, 2.6, 3.0, 3.5, 4.0, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 9.0, 10.0];
+        let currentCheckpointIndex = 0;
+        let currentMultiplier = 1.0;
+        let pendingGoldenPipe = false;
+        let pipesPassedCount = 0;
+        
+        let birdY = GAME_CONFIG.startY;
+        let birdVelocity = 0;
+        let pipes = [];
+        let groundOffset = 0;
+        let score = 0;
+        let highScore = 0;
+        let animationId = null;
+        let lastTimestamp = 0;
+        let wingUp = true;
+        let wingInterval = null;
+        
+        // DOM Elements
+        const betPopupDiv = document.getElementById('betPopup');
+        const actionPopupDiv = document.getElementById('actionPopup');
+        const balanceSpan = document.getElementById('balanceDisplay');
+        const confirmBetBtn = document.getElementById('confirmBetBtn');
+        const cashoutBtn = document.getElementById('cashoutBtn');
+        const continueBtn = document.getElementById('continueBtn');
+        const multiplierValueSpan = document.getElementById('multiplierValue');
+        const popupWinAmountSpan = document.getElementById('popupWinAmount');
+        const continueTimerSpan = document.getElementById('continueTimer');
+        
+        try {
+            const saved = localStorage.getItem('flappyHighScore');
+            if (saved && !isNaN(parseInt(saved,10))) highScore = parseInt(saved,10);
+        } catch(e) {}
+        
+        function updateBalanceUI() {
+            if (window.PK96 && typeof window.PK96.getBalance === 'function') {
+                playerBalance = window.PK96.getBalance();
+            } else {
+                const saved = localStorage.getItem('flappy_balance');
+                if (saved && !isNaN(parseFloat(saved))) playerBalance = parseFloat(saved);
+            }
+            balanceSpan.innerText = `💰 BAL: ${Math.floor(playerBalance)}`;
+        }
+
+        function savePlayerBalance() {
+            if (window.PK96 && typeof window.PK96.setBalance === 'function') {
+                window.PK96.setBalance(playerBalance);
+            } else {
+                localStorage.setItem('flappy_balance', playerBalance.toString());
+            }
+            balanceSpan.innerText = `💰 BAL: ${Math.floor(playerBalance)}`;
+        }
+
+        window.addEventListener('pk96_balance_changed', updateBalanceUI);
+        window.addEventListener('storage', updateBalanceUI);
+        function getCurrentWinAmount() { return currentBet * currentMultiplier; }
+        
+        function resetRoundProgression() {
+            currentCheckpointIndex = 0;
+            currentMultiplier = 1.0;
+            pipesPassedCount = 0;
+            pendingGoldenPipe = false;
+            score = 0;
+            birdY = GAME_CONFIG.startY;
+            birdVelocity = 0;
+            groundOffset = 0;
+            const initGapY = GAME_CONFIG.minGapY + Math.random() * (GAME_CONFIG.maxGapY - GAME_CONFIG.minGapY);
+            pipes = [{ x: GAME_CONFIG.width + 100, gapY: initGapY, passed: false, isGolden: false }];
+        }
+        
+        function onCheckpointHit(multiplierValue) {
+            if (!activeGame) return;
+            if (gameState !== 'playing') return;
+            if (awaitingCheckpointPopup) return;
+            
+            sound.checkpoint();
+            currentMultiplier = multiplierValue;
+            gamePaused = true;
+            gameState = 'paused_multiplier';
+            awaitingCheckpointPopup = true;
+            if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+            
+            const winAmount = currentBet * currentMultiplier;
+            multiplierValueSpan.innerText = `x${currentMultiplier.toFixed(2)}`;
+            popupWinAmountSpan.innerText = `${Math.floor(winAmount)}`;
+            actionPopupDiv.classList.remove('hidden');
+            continueTimerSpan.classList.add('hidden');
+            document.querySelector('.action-btns').style.opacity = '1';
+            draw(); // ensure the popup is drawn over the game
+        }
+        
+        function cashoutHandler() {
+            if (!awaitingCheckpointPopup) return;
+            sound.cashout();
+            const win = currentBet * currentMultiplier;
+            playerBalance += win;
+            savePlayerBalance();
+            closePopupAndResetRound();
+            endGameSessionAndShowBet();
+        }
+        
+        let countdownInterval = null;
+        function continueHandler() {
+            if (!awaitingCheckpointPopup) return;
+            document.querySelector('.action-btns').style.opacity = '0.4';
+            continueTimerSpan.classList.remove('hidden');
+            let timer = 3;
+            continueTimerSpan.innerText = `⏱️ ${timer}s`;
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                timer--;
+                continueTimerSpan.innerText = `⏱️ ${timer}s`;
+                if (timer <= 0) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                    resumeGameAfterCheckpoint();
+                }
+            }, 1000);
+        }
+        
+        function resumeGameAfterCheckpoint() {
+            document.querySelector('.action-btns').style.opacity = '1';
+            continueTimerSpan.classList.add('hidden');
+            actionPopupDiv.classList.add('hidden');
+            awaitingCheckpointPopup = false;
+            gamePaused = false;
+            gameState = 'playing';
+            lastTimestamp = 0;
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        function closePopupAndResetRound() {
+            if(countdownInterval) clearInterval(countdownInterval);
+            actionPopupDiv.classList.add('hidden');
+            awaitingCheckpointPopup = false;
+            gamePaused = false;
+        }
+        
+        function endGameSessionAndShowBet() {
+            if(countdownInterval) clearInterval(countdownInterval);
+            if(animationId) cancelAnimationFrame(animationId);
+            animationId = null;
+            activeGame = false;
+            gameState = 'start';
+            gamePaused = false;
+            awaitingCheckpointPopup = false;
+            actionPopupDiv.classList.add('hidden');
+            betPopupDiv.classList.remove('hidden');
+            draw();
+        }
+        
+        function startGameRound(betAmount) {
+            if (betAmount > playerBalance) return false;
+            playerBalance -= betAmount;
+            currentBet = betAmount;
+            savePlayerBalance();
+            resetRoundProgression();
+            activeGame = true;
+            gameState = 'playing';
+            gamePaused = false;
+            awaitingCheckpointPopup = false;
+            actionPopupDiv.classList.add('hidden');
+            if (animationId) cancelAnimationFrame(animationId);
+            lastTimestamp = 0;
+            animationId = requestAnimationFrame(gameLoop);
+            return true;
+        }
+        
+        // ==================== GAME MECHANICS ====================
+        function updatePipes(deltaTime) {
+            let newPipes = [];
+            for (let pipe of pipes) {
+                const newX = pipe.x - GAME_CONFIG.pipeSpeed * deltaTime;
+                if (newX + GAME_CONFIG.pipeWidth > -20) {
+                    newPipes.push({ ...pipe, x: newX });
+                }
+            }
+            if (newPipes.length === 0 || newPipes[newPipes.length-1].x < GAME_CONFIG.width - GAME_CONFIG.pipeSpacing) {
+                const gapY = GAME_CONFIG.minGapY + Math.random() * (GAME_CONFIG.maxGapY - GAME_CONFIG.minGapY);
+                let isGolden = false;
+                if (pendingGoldenPipe) {
+                    isGolden = true;
+                    pendingGoldenPipe = false;
+                }
+                newPipes.push({ x: GAME_CONFIG.width + GAME_CONFIG.pipeWidth, gapY: gapY, passed: false, isGolden: isGolden });
+            }
+            return newPipes;
+        }
+        
+        function checkCollision(birdRect, pipe) {
+            const pipeLeft = pipe.x;
+            const pipeRight = pipe.x + GAME_CONFIG.pipeWidth;
+            const gapTop = pipe.gapY - GAME_CONFIG.gapSize / 2;
+            const gapBottom = pipe.gapY + GAME_CONFIG.gapSize / 2;
+            const birdLeft = birdRect.x;
+            const birdRight = birdRect.x + birdRect.width;
+            const birdTop = birdRect.y;
+            const birdBottom = birdRect.y + birdRect.height;
+            if (birdRight > pipeLeft && birdLeft < pipeRight) {
+                if (birdTop < gapTop || birdBottom > gapBottom) return true;
+            }
+            return false;
+        }
+        
+        function updateScoringAndCheckpoint(birdRect, currentPipes) {
+            let scoreIncreased = false;
+            for (let i=0; i<currentPipes.length; i++) {
+                const pipe = currentPipes[i];
+                if (!pipe.passed && pipe.x + GAME_CONFIG.pipeWidth < GAME_CONFIG.birdX) {
+                    score++;
+                    pipesPassedCount++;
+                    pipe.passed = true;
+                    scoreIncreased = true;
+                    
+                    if (pipe.isGolden === true) {
+                        let multiplierValue = 1.4;
+                        if (currentCheckpointIndex < multiplierChain.length) {
+                            multiplierValue = multiplierChain[currentCheckpointIndex];
+                        } else {
+                            multiplierValue = multiplierChain[multiplierChain.length-1] + (currentCheckpointIndex - multiplierChain.length + 1) * 0.5;
+                        }
+                        currentCheckpointIndex++;
+                        if (activeGame && gameState === 'playing' && !gamePaused && !awaitingCheckpointPopup) {
+                            onCheckpointHit(multiplierValue);
+                        }
+                    }
+                }
+            }
+            if (scoreIncreased) {
+                if (pipesPassedCount % 7 === 0 && pipesPassedCount > 0) {
+                    if (!pendingGoldenPipe) {
+                        pendingGoldenPipe = true;
+                    }
+                }
+            }
+        }
+        
+        function isGameCollision() {
+            if (birdY <= 0 || birdY >= GAME_CONFIG.height - GAME_CONFIG.birdSize - 80) return true;
+            const birdRect = {
+                x: GAME_CONFIG.birdX + 4,
+                y: birdY + 4,
+                width: GAME_CONFIG.birdSize - 8,
+                height: GAME_CONFIG.birdSize - 8,
+            };
+            for (let pipe of pipes) {
+                if (checkCollision(birdRect, pipe)) return true;
+            }
+            return false;
+        }
+        
+        // ==================== GAME LOOP ====================
+        function gameLoop(timestamp) {
+            if (gameState !== 'playing' || gamePaused || awaitingCheckpointPopup) {
+                if (gameState === 'playing' && !gamePaused && !awaitingCheckpointPopup) {
+                    // Resume if conditions met
+                } else {
+                    if (animationId && (gameState !== 'playing' || gamePaused)) {
+                        // Keep looping if paused, but don't update
+                        animationId = requestAnimationFrame(gameLoop);
+                    }
+                    return;
+                }
+            }
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            let delta = Math.min((timestamp - lastTimestamp) / 16.67, 2.0);
+            if (delta <= 0) {
+                animationId = requestAnimationFrame(gameLoop);
+                lastTimestamp = timestamp;
+                return;
+            }
+            lastTimestamp = timestamp;
+            
+            birdVelocity = Math.min(birdVelocity + GAME_CONFIG.gravity * delta, 12);
+            birdY = birdY + birdVelocity * delta;
+            birdY = Math.max(0, Math.min(birdY, GAME_CONFIG.height - GAME_CONFIG.birdSize - 80));
+            groundOffset = (groundOffset + GAME_CONFIG.pipeSpeed * delta) % 24;
+            pipes = updatePipes(delta);
+            
+            if (isGameCollision()) {
+                sound.crash();
+                if (activeGame) {
+                    activeGame = false;
+                    gameState = 'gameover';
+                    if (animationId) cancelAnimationFrame(animationId);
+                    animationId = null;
+                    if (score > highScore) {
+                        highScore = score;
+                        localStorage.setItem('flappyHighScore', highScore.toString());
+                    }
+                    draw();
+                    setTimeout(() => {
+                        if (gameState !== 'start') {
+                            betPopupDiv.classList.remove('hidden');
+                            gameState = 'start';
+                            activeGame = false;
+                            draw();
+                        }
+                    }, 1500);
+                }
+                return;
+            }
+            
+            updateScoringAndCheckpoint(null, pipes);
+            draw();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+        
+        // -------------------- DRAWING FUNCTIONS -----------------
+        function drawSky() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, GAME_CONFIG.height);
+            gradient.addColorStop(0, '#7bc9ff');
+            gradient.addColorStop(0.5, '#99d6ff');
+            gradient.addColorStop(1, '#f7e3b0');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, GAME_CONFIG.width, GAME_CONFIG.height);
+        }
+        function drawSun() { ctx.save(); ctx.shadowBlur=15; ctx.beginPath(); ctx.arc(GAME_CONFIG.width-60,60,32,0,Math.PI*2); ctx.fillStyle='#ffdd99'; ctx.fill(); ctx.restore(); }
+        function drawCloud(x,y,w,h){ ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.beginPath(); ctx.ellipse(x,y,w,h,0,0,Math.PI*2); ctx.ellipse(x+w*0.6,y-h*0.3,w*0.8,h*0.8,0,0,Math.PI*2); ctx.ellipse(x-w*0.4,y-h*0.2,w*0.7,h*0.7,0,0,Math.PI*2); ctx.fill(); }
+        function drawClouds(){ ctx.globalAlpha=0.75; drawCloud(60,70,40,22); drawCloud(130,50,50,25); drawCloud(280,55,55,28); drawCloud(340,90,35,18); drawCloud(30,130,45,22); drawCloud(200,100,48,24); ctx.globalAlpha=0.55; drawCloud(250,140,40,20); drawCloud(100,160,38,19); ctx.globalAlpha=1; }
+        function drawHills(){
+            ctx.fillStyle='rgba(5,100,50,0.4)'; ctx.beginPath(); ctx.moveTo(0,GAME_CONFIG.height-100); ctx.quadraticCurveTo(50,GAME_CONFIG.height-130,100,GAME_CONFIG.height-115); ctx.quadraticCurveTo(150,GAME_CONFIG.height-100,200,GAME_CONFIG.height-120); ctx.quadraticCurveTo(250,GAME_CONFIG.height-140,300,GAME_CONFIG.height-115); ctx.quadraticCurveTo(350,GAME_CONFIG.height-95,400,GAME_CONFIG.height-110); ctx.lineTo(400,GAME_CONFIG.height-80); ctx.lineTo(0,GAME_CONFIG.height-80); ctx.fill();
+            ctx.fillStyle='rgba(5,85,40,0.5)'; ctx.beginPath(); ctx.moveTo(0,GAME_CONFIG.height-85); ctx.quadraticCurveTo(80,GAME_CONFIG.height-105,150,GAME_CONFIG.height-95); ctx.quadraticCurveTo(220,GAME_CONFIG.height-80,280,GAME_CONFIG.height-100); ctx.quadraticCurveTo(340,GAME_CONFIG.height-115,400,GAME_CONFIG.height-95); ctx.lineTo(400,GAME_CONFIG.height-80); ctx.lineTo(0,GAME_CONFIG.height-80); ctx.fill();
+        }
+        function drawGround(){
+            ctx.fillStyle='#4ade80'; ctx.fillRect(0,GAME_CONFIG.height-80,GAME_CONFIG.width,32);
+            ctx.fillStyle='#22c55e'; ctx.fillRect(0,GAME_CONFIG.height-80,GAME_CONFIG.width,8);
+            ctx.fillStyle='#854d0e'; ctx.fillRect(0,GAME_CONFIG.height-48,GAME_CONFIG.width,48);
+            ctx.fillStyle='#a16207'; ctx.fillRect(0,GAME_CONFIG.height-48,GAME_CONFIG.width,6);
+            for(let i=0;i<20;i++){ const x=(i*24-groundOffset)%(GAME_CONFIG.width+30)-15; if(x>0&&x<GAME_CONFIG.width){ ctx.fillStyle='#86efac'; ctx.beginPath(); ctx.moveTo(x,GAME_CONFIG.height-80); ctx.lineTo(x-3,GAME_CONFIG.height-88); ctx.lineTo(x+3,GAME_CONFIG.height-88); ctx.fill(); } }
+        }
+        function drawPipe(x,gapY, isGolden){
+            const topHeight = gapY - GAME_CONFIG.gapSize/2;
+            const bottomY = gapY + GAME_CONFIG.gapSize/2;
+            const bottomHeight = GAME_CONFIG.height - bottomY - 80;
+            
+            if(isGolden){
+                ctx.fillStyle = '#FFB347';
+                ctx.fillRect(x,0,GAME_CONFIG.pipeWidth,topHeight);
+                ctx.fillStyle = '#FFD966';
+                ctx.fillRect(x+3,0,GAME_CONFIG.pipeWidth-6,topHeight);
+                ctx.fillStyle = '#E67E22';
+                ctx.fillRect(x-4,topHeight-24,GAME_CONFIG.pipeWidth+8,24);
+                ctx.fillStyle = '#F4C542';
+                ctx.fillRect(x-2,topHeight-22,GAME_CONFIG.pipeWidth+4,18);
+                ctx.fillStyle = '#FFB347';
+                ctx.fillRect(x,bottomY,GAME_CONFIG.pipeWidth,bottomHeight);
+                ctx.fillStyle = '#FFD966';
+                ctx.fillRect(x+3,bottomY,GAME_CONFIG.pipeWidth-6,bottomHeight);
+                ctx.fillStyle = '#E67E22';
+                ctx.fillRect(x-4,bottomY,GAME_CONFIG.pipeWidth+8,24);
+                ctx.fillStyle = '#F4C542';
+                ctx.fillRect(x-2,bottomY+3,GAME_CONFIG.pipeWidth+4,18);
+                ctx.shadowBlur = 12;
+                ctx.fillStyle = 'rgba(255,215,0,0.6)';
+                ctx.fillRect(x+5, gapY-35, 8, 40);
+                ctx.fillRect(x+45, gapY-35, 8, 40);
+                ctx.shadowBlur = 0;
+            } else {
+                ctx.fillStyle='#059669'; ctx.fillRect(x,0,GAME_CONFIG.pipeWidth,topHeight);
+                ctx.fillStyle='#10b981'; ctx.fillRect(x+3,0,GAME_CONFIG.pipeWidth-6,topHeight);
+                ctx.fillStyle='#047857'; ctx.fillRect(x-4,topHeight-24,GAME_CONFIG.pipeWidth+8,24);
+                ctx.fillStyle='#34d399'; ctx.fillRect(x-2,topHeight-22,GAME_CONFIG.pipeWidth+4,18);
+                ctx.fillStyle='#059669'; ctx.fillRect(x,bottomY,GAME_CONFIG.pipeWidth,bottomHeight);
+                ctx.fillStyle='#10b981'; ctx.fillRect(x+3,bottomY,GAME_CONFIG.pipeWidth-6,bottomHeight);
+                ctx.fillStyle='#047857'; ctx.fillRect(x-4,bottomY,GAME_CONFIG.pipeWidth+8,24);
+                ctx.fillStyle='#34d399'; ctx.fillRect(x-2,bottomY+3,GAME_CONFIG.pipeWidth+4,18);
+            }
+        }
+        function drawPipes(){
+            for(const pipe of pipes){
+                drawPipe(pipe.x, pipe.gapY, pipe.isGolden === true);
+                if(pipe.isGolden){
+                    ctx.font = 'bold 18px monospace';
+                    ctx.fillStyle = '#FFE484';
+                    ctx.shadowBlur = 4;
+                    ctx.fillText('⭐', pipe.x+22, pipe.gapY-20);
+                    ctx.fillText('CHECK', pipe.x+12, pipe.gapY-38);
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+        function drawBird(y,velocity){
+            const birdX=GAME_CONFIG.birdX, birdSize=GAME_CONFIG.birdSize;
+            const rotation = Math.min(Math.max(velocity*4,-30),60)*Math.PI/180;
+            ctx.save(); ctx.translate(birdX+birdSize/2,y+birdSize/2); ctx.rotate(rotation); ctx.translate(-(birdX+birdSize/2),-(y+birdSize/2));
+            ctx.fillStyle='#fbbf24'; ctx.beginPath(); ctx.ellipse(birdX+birdSize/2,y+birdSize/2,birdSize/2-2,birdSize/2-1,0,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.ellipse(birdX+birdSize/2-3,y+birdSize/2-2,7,8,0,0,Math.PI*2); ctx.fill();
+            const wingY = wingUp ? -5 : 5;
+            ctx.fillStyle='#d97706'; ctx.beginPath(); ctx.ellipse(birdX+12,y+birdSize/2+wingY,10,7,-0.3,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#b45309'; ctx.beginPath(); ctx.ellipse(birdX+10,y+birdSize/2+wingY-1,6,5,-0.2,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='white'; ctx.beginPath(); ctx.arc(birdX+birdSize-11,y+12,6,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#1e293b'; ctx.beginPath(); ctx.arc(birdX+birdSize-10,y+12,2.5,0,Math.PI*2); ctx.fill();
+            ctx.fillStyle='#78350f'; ctx.fillRect(birdX+birdSize-17,y+7,12,2);
+            ctx.fillStyle='#ea580c'; ctx.beginPath(); ctx.moveTo(birdX+birdSize-6,y+14); ctx.lineTo(birdX+birdSize+3,y+16); ctx.lineTo(birdX+birdSize-6,y+20); ctx.fill();
+            ctx.fillStyle='#b45309'; ctx.beginPath(); ctx.moveTo(birdX+4,y+birdSize/2); ctx.lineTo(birdX-3,y+birdSize/2+6); ctx.lineTo(birdX-3,y+birdSize/2-6); ctx.fill();
+            ctx.restore();
+        }
+        function drawScore(){ ctx.font='bold 56px "Segoe UI", system-ui'; ctx.fillStyle='white'; ctx.shadowBlur=4; ctx.fillText(score,GAME_CONFIG.width/2-20,65); ctx.fillStyle='#fef3c7'; ctx.fillText(score,GAME_CONFIG.width/2-22,63); ctx.shadowBlur=0; }
+        function drawMultiplierInfo(){ if(currentMultiplier>1.0){ ctx.font='bold 18px monospace'; ctx.fillStyle='gold'; ctx.shadowBlur=2; ctx.fillText(`x${currentMultiplier.toFixed(2)}`, 20, 55); ctx.fillStyle='#FFBF00'; ctx.fillText(`NEXT CP: ${(7 - (pipesPassedCount % 7))} pipes`, 20, 85); ctx.shadowBlur=0;} }
+        function drawStartScreen(){
+            drawSky(); drawSun(); drawClouds(); drawHills(); drawGround();
+            const bounce = Math.sin(Date.now()*0.008)*6; drawBird(GAME_CONFIG.startY+bounce,0);
+            ctx.font='bold 52px "Segoe UI"'; ctx.fillStyle='white'; ctx.fillText("FLAPPY",95,180); ctx.fillStyle='#fbbf24'; ctx.fillText("BIRD",125,245);
+            ctx.fillStyle='#f59e0b'; ctx.beginPath(); ctx.rect(125,400,150,55); ctx.fill(); ctx.fillStyle='#78350f'; ctx.font='bold 28px "Segoe UI"'; ctx.fillText("PLAY",173,442);
+            if(highScore>0){ ctx.font='bold 20px "Segoe UI"'; ctx.fillStyle='#fef9c3'; ctx.fillText(`Best: ${highScore}`,155,510); }
+            ctx.font='14px "Segoe UI"'; ctx.fillStyle='#fef9c3'; ctx.fillText("Tap / Space to fly",130,555);
+        }
+        function drawGameOverScreen(){
+            drawSky(); drawSun(); drawClouds(); drawHills(); drawGround(); drawPipes(); drawBird(birdY,birdVelocity); drawScore();
+            ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,GAME_CONFIG.width,GAME_CONFIG.height);
+            ctx.font='bold 42px "Segoe UI"'; ctx.fillStyle='#ef4444'; ctx.fillText("GAME OVER",80,230); ctx.fillStyle='#fef3c7'; ctx.fillText("GAME OVER",78,228);
+            ctx.font='bold 32px "Segoe UI"'; ctx.fillStyle='#fde047'; ctx.fillText(`Score: ${score}`,130,320);
+            if(score===highScore&&score>0){ ctx.font='bold 16px "Segoe UI"'; ctx.fillStyle='#facc15'; ctx.fillText("🏆 NEW HIGH SCORE! 🏆",95,370); }
+            ctx.font='24px "Segoe UI"'; ctx.fillStyle='#fcd34d'; ctx.fillText(`Best: ${highScore}`,140,420);
+            ctx.fillStyle='#10b981'; ctx.beginPath(); ctx.rect(120,460,160,48); ctx.fill(); ctx.fillStyle='#064e3b'; ctx.font='bold 22px "Segoe UI"'; ctx.fillText("PLAY AGAIN",136,497);
+        }
+        function draw(){
+            if(gameState === 'start') drawStartScreen();
+            else if(gameState === 'playing') { drawSky(); drawSun(); drawClouds(); drawHills(); drawGround(); drawPipes(); drawBird(birdY,birdVelocity); drawScore(); drawMultiplierInfo(); }
+            else if(gameState === 'gameover') drawGameOverScreen();
+            else if(gameState === 'paused_multiplier') { drawSky(); drawSun(); drawClouds(); drawHills(); drawGround(); drawPipes(); drawBird(birdY,birdVelocity); drawScore(); drawMultiplierInfo(); }
+        }
+        
+        // ==================== INPUT & EVENTS ====================
+        function handleUserAction(e) {
+            if (gameState === 'playing' && activeGame && !gamePaused && !awaitingCheckpointPopup) {
+                birdVelocity = GAME_CONFIG.jumpForce;
+                sound.flap();
+            }
+        }
+        function attachEvents() {
+            canvas.addEventListener('click', handleUserAction);
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleUserAction(e); }, { passive: false });
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' || e.code === 'ArrowUp') {
+                    e.preventDefault();
+                    if (gameState === 'playing' && activeGame && !gamePaused && !awaitingCheckpointPopup) {
+                        birdVelocity = GAME_CONFIG.jumpForce;
+                        sound.flap();
+                    }
+                }
+            });
+            canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        }
+        
+        function startWingAnimation() {
+            if(wingInterval) clearInterval(wingInterval);
+            wingInterval = setInterval(() => { wingUp = !wingUp; if(gameState !== 'gameover') draw(); }, 100);
+        }
+        
+        // Bet buttons logic
+        let selectedBet = null;
+        document.querySelectorAll('.bet-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.bet-btn').forEach(b => b.style.background = '#2b4f3b');
+                btn.style.background = '#f59e0b';
+                selectedBet = parseInt(btn.getAttribute('data-bet'), 10);
+            });
+        });
+        confirmBetBtn.addEventListener('click', () => {
+            if (!selectedBet) return;
+            if (selectedBet > playerBalance) {
+                if(window.showLobbyToast) showLobbyToast("Insufficient balance! Please deposit in lobby to play.");
+                return;
+            }
+            startGameRound(selectedBet);
+            betPopupDiv.classList.add('hidden');
+        });
+        cashoutBtn.addEventListener('click', cashoutHandler);
+        continueBtn.addEventListener('click', continueHandler);
+        
+        function handleResize() { updateCanvasScale(); draw(); }
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('orientationchange', () => setTimeout(handleResize, 30));
+        
+        function init() {
+            updateCanvasScale();
+            attachEvents();
+            startWingAnimation();
+            updateBalanceUI();
+            betPopupDiv.classList.remove('hidden');
+            gameState = 'start';
+            draw();
+        }
+        init();
+    })();
+</script>
+</body>
+</html>

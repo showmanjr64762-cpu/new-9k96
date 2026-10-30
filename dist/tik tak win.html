@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+<link rel="shortcut icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+<link rel="apple-touch-icon" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+<script>
+        window.alert = function(msg) {
+          try {
+            if (window.parent && window.parent !== window && window.parent.showLobbyToast) {
+              window.parent.showLobbyToast(msg);
+              return;
+            }
+          } catch(e) {}
+          try {
+            let toast = document.createElement("div");
+            toast.style.cssText = "position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999999;background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;box-shadow:0 4px 12px rgba(0,0,0,0.5);border:1px solid #38bdf8;pointer-events:none;font-family:sans-serif;";
+            toast.textContent = msg;
+            (document.body || document.documentElement).appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+          } catch(err) {
+            console.log("[ALERT]", msg);
+          }
+        };
+      </script>
+    <script src="./pk96-balance.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tic Tak Win · Alien World</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            padding: 0.5rem;
+            touch-action: manipulation;
+            background: #0a0e17;
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           ANIMATED ALIEN PLANET BACKGROUND
+           ============================================ */
+        #alien-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: radial-gradient(ellipse at 30% 20%, #1a0a2e, #0a0e17 70%);
+            overflow: hidden;
+        }
+
+        /* Planets */
+        .planet {
+            position: absolute;
+            border-radius: 50%;
+            box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), 0 0 80px rgba(100, 200, 255, 0.2);
+            background: radial-gradient(circle at 30% 30%, #4a7a9a, #1a3a5a);
+            animation: floatPlanet 20s ease-in-out infinite;
+        }
+        .planet::before {
+            content: '';
+            position: absolute;
+            inset: 5%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 20% 30%, rgba(100, 220, 255, 0.3), transparent 60%);
+        }
+        .planet::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: repeating-linear-gradient(45deg, 
+                transparent, 
+                transparent 10px, 
+                rgba(0,0,0,0.1) 10px, 
+                rgba(0,0,0,0.1) 12px
+            );
+            animation: planetRotate 30s linear infinite;
+        }
+
+        @keyframes floatPlanet {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(15px, -20px) scale(1.02); }
+            66% { transform: translate(-10px, 15px) scale(0.98); }
+        }
+        @keyframes planetRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .planet-1 {
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            right: -80px;
+            background: radial-gradient(circle at 30% 30%, #7a4a9a, #3a1a5a);
+            animation-delay: 0s;
+            box-shadow: inset -20px -20px 60px rgba(0,0,0,0.8), 0 0 120px rgba(180, 100, 255, 0.15);
+        }
+        .planet-2 {
+            width: 180px;
+            height: 180px;
+            bottom: 20px;
+            left: -40px;
+            background: radial-gradient(circle at 40% 30%, #5a8a4a, #1a3a2a);
+            animation-delay: -7s;
+            box-shadow: inset -15px -15px 40px rgba(0,0,0,0.8), 0 0 80px rgba(100, 255, 150, 0.1);
+        }
+        .planet-3 {
+            width: 120px;
+            height: 120px;
+            top: 40%;
+            left: 60%;
+            background: radial-gradient(circle at 30% 40%, #aa6a3a, #5a2a1a);
+            animation-delay: -12s;
+            box-shadow: inset -10px -10px 30px rgba(0,0,0,0.8), 0 0 60px rgba(255, 150, 80, 0.1);
+        }
+
+        /* Stars */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) ease-in-out infinite alternate;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* Atmosphere glow */
+        .atmosphere {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at 50% 80%, rgba(80, 200, 255, 0.03), transparent 60%);
+            pointer-events: none;
+        }
+
+        /* Floating spores */
+        .spore {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(100, 255, 200, 0.4), transparent);
+            animation: sporeFloat var(--duration) ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes sporeFloat {
+            0% { transform: translate(0, 0) scale(1); opacity: 0.2; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(1.5); opacity: 0.6; }
+        }
+
+        /* ============================================
+           CASINO CARD - ALIEN THEME
+           ============================================ */
+        .casino-card {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(165deg, rgba(20, 30, 43, 0.92), rgba(11, 17, 25, 0.95));
+            border: 2px solid #7fc5e0;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.9),
+                0 0 30px rgba(127, 197, 224, 0.2),
+                inset 0 0 60px #00000066,
+                0 0 100px rgba(100, 200, 255, 0.05);
+            border-radius: 2rem 2rem 1.5rem 1.5rem;
+            padding: 1rem;
+            max-width: 420px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            margin: 0.5rem auto;
+            transition: border-color 0.5s;
+        }
+
+        /* Animated alien glow border */
+        .casino-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, 
+                transparent, 
+                rgba(127, 197, 224, 0.1), 
+                transparent, 
+                rgba(127, 197, 224, 0.1), 
+                transparent, 
+                rgba(127, 197, 224, 0.1), 
+                transparent
+            );
+            animation: rotateGlow 30s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotateGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Alien-themed header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+        }
+
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #7fc5e0, #4a9aba);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+            text-shadow: 0 0 30px rgba(127, 197, 224, 0.3);
+        }
+
+        .logo-sub {
+            font-size: 0.6rem;
+            color: rgba(127, 197, 224, 0.6);
+            background: rgba(127, 197, 224, 0.1);
+            padding: 0.15rem 0.6rem;
+            border-radius: 20px;
+            border: 1px solid rgba(127, 197, 224, 0.2);
+            -webkit-text-fill-color: #7fc5e0;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            animation: pulseText 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .logo-sub span {
+            color: #ff6b6b;
+            -webkit-text-fill-color: #ff6b6b;
+            animation: none;
+        }
+
+        /* Balance section - alien themed */
+        .balance-section {
+            background: linear-gradient(135deg, rgba(127, 197, 224, 0.1), rgba(15, 26, 36, 0.9));
+            border-radius: 16px;
+            padding: 0.5rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(127, 197, 224, 0.2);
+            margin-bottom: 0.8rem;
+            position: relative;
+            z-index: 1;
+            box-shadow: inset 0 0 30px rgba(127, 197, 224, 0.05);
+            backdrop-filter: blur(5px);
+        }
+
+        .balance-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(127, 197, 224, 0.6);
+            font-weight: 600;
+        }
+
+        .balance-amount {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #7fc5e0;
+            text-shadow: 0 0 20px rgba(127, 197, 224, 0.3);
+        }
+
+        /* Bet section - alien themed */
+        .bet-section {
+            background: linear-gradient(135deg, rgba(127, 197, 224, 0.08), rgba(15, 26, 36, 0.9));
+            border-radius: 16px;
+            padding: 0.6rem 1rem;
+            border: 1px solid rgba(127, 197, 224, 0.15);
+            margin-bottom: 0.8rem;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(5px);
+        }
+
+        .bet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.3rem;
+        }
+
+        .bet-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(127, 197, 224, 0.6);
+            font-weight: 600;
+        }
+
+        .bet-amount-display {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #7fc5e0;
+            text-shadow: 0 0 20px rgba(127, 197, 224, 0.2);
+        }
+
+        .bet-slider-container {
+            position: relative;
+            padding: 0.3rem 0;
+        }
+
+        .bet-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #1a2a3f, #7fc5e0);
+            outline: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .bet-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #7fc5e0, #4a9aba);
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(127, 197, 224, 0.4), 0 4px 8px #00000088;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s;
+        }
+
+        .bet-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #7fc5e0, #4a9aba);
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(127, 197, 224, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .bet-quick-options {
+            display: flex;
+            gap: 0.3rem;
+            margin-top: 0.3rem;
+            flex-wrap: wrap;
+        }
+
+        .bet-quick-btn {
+            flex: 1;
+            min-width: 40px;
+            padding: 0.2rem 0.1rem;
+            background: rgba(127, 197, 224, 0.1);
+            border: 1px solid rgba(127, 197, 224, 0.15);
+            border-radius: 10px;
+            color: rgba(127, 197, 224, 0.6);
+            font-size: 0.6rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .bet-quick-btn:hover, .bet-quick-btn.active {
+            background: rgba(127, 197, 224, 0.2);
+            color: #7fc5e0;
+            border-color: #7fc5e0;
+            box-shadow: 0 0 20px rgba(127, 197, 224, 0.2);
+            transform: scale(1.05);
+        }
+
+        .bet-quick-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Place Bet Button */
+        .bet-confirm-area {
+            display: flex;
+            justify-content: center;
+            margin: 0.5rem 0 0.2rem;
+        }
+
+        .btn-confirm-bet {
+            background: linear-gradient(135deg, #7fc5e0, #4a9aba);
+            color: #0a0e17;
+            padding: 0.5rem 2rem;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: none;
+            box-shadow: 0 0 20px rgba(127, 197, 224, 0.3);
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-confirm-bet:active {
+            transform: scale(0.96);
+        }
+
+        .btn-confirm-bet:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: scale(1);
+            box-shadow: none;
+        }
+
+        .btn-confirm-bet:hover:not(:disabled) {
+            box-shadow: 0 0 30px rgba(127, 197, 224, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Game board - alien themed */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: linear-gradient(145deg, rgba(10, 17, 25, 0.95), rgba(20, 30, 43, 0.95));
+            padding: 12px;
+            border-radius: 2rem;
+            box-shadow: 
+                inset 0 0 50px #000000cc,
+                0 15px 30px #00000099,
+                0 0 0 1px rgba(127, 197, 224, 0.1);
+            margin: 0.8rem 0;
+            position: relative;
+            z-index: 1;
+            max-width: 100%;
+        }
+
+        .cell {
+            background: linear-gradient(145deg, rgba(22, 33, 46, 0.8), rgba(11, 17, 25, 0.9));
+            aspect-ratio: 1/1;
+            border-radius: 16px;
+            box-shadow: 
+                0 3px 0 #060a0f,
+                0 8px 20px #00000088,
+                inset 0 1px 0 rgba(127, 197, 224, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: #f0e9d0;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(127, 197, 224, 0.1);
+            text-shadow: 0 0 20px currentColor;
+            touch-action: manipulation;
+            user-select: none;
+            position: relative;
+            min-height: 70px;
+        }
+
+        .cell::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 13px;
+            background: radial-gradient(circle at 40% 40%, rgba(127, 197, 224, 0.03), transparent);
+            pointer-events: none;
+        }
+
+        .cell.win-highlight {
+            background: linear-gradient(145deg, rgba(127, 197, 224, 0.3), rgba(74, 154, 186, 0.3)) !important;
+            border-color: #7fc5e0 !important;
+            box-shadow: 0 0 40px rgba(127, 197, 224, 0.4), 0 3px 0 #1a3a5a !important;
+            transform: scale(1.03);
+        }
+
+        .cell.X-move {
+            color: #f5b87e;
+            text-shadow: 0 0 25px rgba(245, 184, 126, 0.5), 0 0 50px rgba(245, 184, 126, 0.2);
+        }
+
+        .cell.O-move {
+            color: #7fc5e0;
+            text-shadow: 0 0 25px rgba(127, 197, 224, 0.5), 0 0 50px rgba(127, 197, 224, 0.2);
+        }
+
+        .cell:active:not(.disabled-cell) {
+            transform: scale(0.92);
+        }
+
+        .cell.disabled-cell {
+            cursor: not-allowed;
+            opacity: 0.4;
+            filter: grayscale(0.5);
+            transform: scale(0.98);
+        }
+
+        .cell:hover:not(.disabled-cell):not(.X-move):not(.O-move) {
+            background: linear-gradient(145deg, rgba(30, 47, 64, 0.8), rgba(18, 28, 40, 0.9));
+            border-color: rgba(127, 197, 224, 0.3);
+        }
+
+        /* Action bar - alien themed */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            margin-top: 0.2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .game-status {
+            background: linear-gradient(135deg, rgba(127, 197, 224, 0.08), rgba(8, 14, 21, 0.9));
+            padding: 0.4rem 1rem;
+            border-radius: 25px;
+            border-left: 3px solid #7fc5e0;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(232, 219, 170, 0.9);
+            flex: 1;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: inset 0 0 20px #00000066;
+            text-shadow: 0 1px 4px #00000088;
+            border: 1px solid rgba(127, 197, 224, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.4rem 1rem;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+            white-space: nowrap;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7fc5e0, #4a9aba);
+            color: #0a0e17;
+            box-shadow: 0 3px 15px rgba(127, 197, 224, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.95);
+            box-shadow: 0 1px 10px rgba(127, 197, 224, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 3px 25px rgba(127, 197, 224, 0.4);
+        }
+
+        /* Footer - alien themed */
+        .footer-msg {
+            margin-top: 0.8rem;
+            text-align: center;
+            font-size: 0.6rem;
+            opacity: 0.5;
+            border-top: 1px dashed rgba(127, 197, 224, 0.1);
+            padding-top: 0.6rem;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+            color: rgba(127, 197, 224, 0.6);
+        }
+
+        .footer-msg span {
+            color: #7fc5e0;
+            opacity: 1;
+        }
+
+        /* Result Popup - alien themed */
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 14, 23, 0.9);
+            backdrop-filter: blur(12px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .result-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .result-popup {
+            background: linear-gradient(165deg, rgba(26, 42, 63, 0.95), rgba(11, 17, 25, 0.98));
+            border: 2px solid #7fc5e0;
+            border-radius: 2rem;
+            padding: 2.5rem 2rem;
+            max-width: 340px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(127, 197, 224, 0.2), 0 25px 50px #000000cc;
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+            to { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .result-popup .result-icon {
+            font-size: 3.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-popup .result-title {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #7fc5e0;
+            margin-bottom: 0.3rem;
+            text-shadow: 0 0 30px rgba(127, 197, 224, 0.3);
+        }
+
+        .result-popup .result-sub {
+            font-size: 1rem;
+            color: rgba(127, 197, 224, 0.6);
+            margin-bottom: 0.5rem;
+        }
+
+        .result-popup .result-amount {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fae37b;
+            margin-bottom: 1.2rem;
+        }
+
+        .result-popup .result-btn {
+            background: linear-gradient(135deg, #7fc5e0, #4a9aba);
+            color: #0a0e17;
+            border: none;
+            padding: 0.6rem 2.5rem;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(127, 197, 224, 0.3);
+        }
+
+        .result-popup .result-btn:active {
+            transform: scale(0.95);
+        }
+
+        .result-popup .result-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 25px rgba(127, 197, 224, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .casino-card { padding: 0.7rem; border-radius: 1.5rem; max-width: 100%; margin: 0.2rem; }
+            .logo { font-size: 1.3rem; }
+            .balance-amount { font-size: 1.1rem; }
+            .game-board { gap: 6px; padding: 8px; }
+            .cell { font-size: 2.2rem; min-height: 55px; border-radius: 12px; }
+            .cell::after { border-radius: 10px; }
+            .bet-quick-btn { min-width: 32px; font-size: 0.5rem; padding: 0.15rem 0.1rem; }
+            .game-status { font-size: 0.7rem; padding: 0.3rem 0.7rem; min-width: 80px; }
+            .btn { font-size: 0.65rem; padding: 0.3rem 0.7rem; }
+            .bet-section { padding: 0.4rem 0.7rem; }
+            .balance-section { padding: 0.4rem 0.7rem; }
+            .bet-amount-display { font-size: 0.9rem; }
+            .bet-slider::-webkit-slider-thumb { width: 16px; height: 16px; }
+            .bet-slider::-moz-range-thumb { width: 16px; height: 16px; }
+            .result-popup { padding: 1.8rem 1.2rem; }
+            .result-popup .result-title { font-size: 1.4rem; }
+            .btn-confirm-bet { font-size: 0.8rem; padding: 0.4rem 1.5rem; }
+        }
+
+        @media (max-width: 380px) {
+            .cell { font-size: 1.8rem; min-height: 45px; }
+            .logo { font-size: 1.1rem; }
+            .logo-sub { font-size: 0.5rem; padding: 0.1rem 0.4rem; }
+        }
+
+        @media (min-width: 600px) {
+            body { padding: 1rem; align-items: center; }
+            .casino-card { max-width: 400px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== ANIMATED ALIEN PLANET BACKGROUND ===== -->
+    <div id="alien-bg">
+        <div class="planet planet-1"></div>
+        <div class="planet planet-2"></div>
+        <div class="planet planet-3"></div>
+        <div class="stars" id="starsContainer"></div>
+        <div class="atmosphere"></div>
+        <div id="sporesContainer"></div>
+    </div>
+
+    <!-- ===== GAME ===== -->
+    <div class="casino-card">
+        <div class="header">
+            <div class="logo">🛸 Tic Tak Win</div>
+            <div class="logo-sub">ALIEN <span>WORLD</span></div>
+        </div>
+
+        <div class="balance-section">
+            <span class="balance-label">💎 CRYSTALS</span>
+            <span class="balance-amount" id="balanceDisplay">0</span>
+        </div>
+
+        <div class="bet-section">
+            <div class="bet-header">
+                <span class="bet-label">🎯 BET</span>
+                <span class="bet-amount-display" id="betDisplay">100</span>
+            </div>
+            <div class="bet-slider-container">
+                <input type="range" class="bet-slider" id="betSlider" min="10" max="1000" value="100" step="10">
+            </div>
+            <div class="bet-quick-options">
+                <button class="bet-quick-btn" data-bet="25">25</button>
+                <button class="bet-quick-btn active" data-bet="100">100</button>
+                <button class="bet-quick-btn" data-bet="250">250</button>
+                <button class="bet-quick-btn" data-bet="500">500</button>
+                <button class="bet-quick-btn" data-bet="1000">1K</button>
+            </div>
+            <div class="bet-confirm-area">
+                <button class="btn-confirm-bet" id="confirmBetBtn">🚀 PLACE BET & START</button>
+            </div>
+        </div>
+
+        <div class="game-board" id="boardContainer">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+
+        <div class="action-bar">
+            <div class="game-status" id="statusMessage">🎲 Place bet to start</div>
+            <div class="button-group">
+                <button class="btn btn-primary" id="resetGameBtn">🔄 New Game</button>
+            </div>
+        </div>
+        <div class="footer-msg">👾 alien AI · win multiplier <span>1x–50x</span> (rare high) 👾</div>
+    </div>
+
+    <!-- Result Popup -->
+    <div class="result-overlay" id="resultOverlay">
+        <div class="result-popup">
+            <div class="result-icon" id="resultIcon">🏆</div>
+            <div class="result-title" id="resultTitle">You Win!</div>
+            <div class="result-sub" id="resultSub">Multiplier</div>
+            <div class="result-amount" id="resultAmount">+200</div>
+            <button class="result-btn" id="resultBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== ALIEN BACKGROUND GENERATOR =====
+        (function createAlienBackground() {
+            const starsContainer = document.getElementById('starsContainer');
+            for (let i = 0; i < 150; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3 + 1;
+                star.style.width = size + 'px';
+                star.style.height = size + 'px';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--duration', (Math.random() * 4 + 2) + 's');
+                star.style.animationDelay = Math.random() * 5 + 's';
+                if (Math.random() > 0.7) {
+                    star.style.background = 'rgba(150, 200, 255, 0.8)';
+                } else if (Math.random() > 0.6) {
+                    star.style.background = 'rgba(255, 200, 150, 0.7)';
+                }
+                starsContainer.appendChild(star);
+            }
+
+            const sporesContainer = document.getElementById('sporesContainer');
+            const colors = ['rgba(100, 255, 200, 0.3)', 'rgba(200, 100, 255, 0.25)', 'rgba(100, 200, 255, 0.2)', 'rgba(255, 200, 100, 0.2)'];
+            for (let i = 0; i < 30; i++) {
+                const spore = document.createElement('div');
+                spore.className = 'spore';
+                const size = Math.random() * 8 + 3;
+                spore.style.width = size + 'px';
+                spore.style.height = size + 'px';
+                spore.style.left = Math.random() * 100 + '%';
+                spore.style.top = Math.random() * 100 + '%';
+                spore.style.background = colors[Math.floor(Math.random() * colors.length)];
+                spore.style.setProperty('--duration', (Math.random() * 15 + 10) + 's');
+                spore.style.setProperty('--dx', (Math.random() * 60 - 30) + 'px');
+                spore.style.setProperty('--dy', (Math.random() * 60 - 30) + 'px');
+                spore.style.animationDelay = Math.random() * 20 + 's';
+                sporesContainer.appendChild(spore);
+            }
+        })();
+
+        // ===== GAME LOGIC =====
+        (function() {
+            // DOM REFS
+            const cells = document.querySelectorAll('.cell');
+            const statusEl = document.getElementById('statusMessage');
+            const balanceEl = document.getElementById('balanceDisplay');
+            const betDisplay = document.getElementById('betDisplay');
+            const betSlider = document.getElementById('betSlider');
+            const quickBtns = document.querySelectorAll('.bet-quick-btn');
+            const resetBtn = document.getElementById('resetGameBtn');
+            const resultOverlay = document.getElementById('resultOverlay');
+            const resultIcon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultSub = document.getElementById('resultSub');
+            const resultAmount = document.getElementById('resultAmount');
+            const resultBtn = document.getElementById('resultBtn');
+            const confirmBetBtn = document.getElementById('confirmBetBtn');
+
+            // AUDIO - INCREASED VOLUME
+            let audioCtx = null;
+            const VOLUME_MULTIPLIER = 2.5;
+
+            function initAudio() {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            function playPlayerSound() {
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const bufferSize = audioCtx.sampleRate * 0.06;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        const t = i / bufferSize;
+                        const scratch = (Math.random() * 2 - 1) * Math.exp(-t * 5) * 0.5;
+                        const texture = Math.sin(i * 0.3) * 0.2 * Math.exp(-t * 3);
+                        const pop = Math.random() > 0.97 ? (Math.random() * 2 - 1) * 0.3 * Math.exp(-t * 8) : 0;
+                        data[i] = scratch * 0.5 + texture * 0.3 + pop;
+                    }
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    const gainNode = audioCtx.createGain();
+                    gainNode.gain.value = 0.35 * VOLUME_MULTIPLIER;
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.06);
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 1800;
+                    filter.Q.value = 1.2;
+                    source.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    source.start();
+                    source.stop(audioCtx.currentTime + 0.06);
+                } catch (e) {}
+            }
+
+            function playBotSound() {
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const bufferSize = audioCtx.sampleRate * 0.05;
+                    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        const t = i / bufferSize;
+                        const scratch = (Math.random() * 2 - 1) * Math.exp(-t * 6) * 0.7;
+                        const texture = Math.sin(i * 0.5) * 0.3 * Math.exp(-t * 4);
+                        const click = Math.random() > 0.95 ? (Math.random() * 2 - 1) * 0.4 * Math.exp(-t * 12) : 0;
+                        data[i] = scratch * 0.6 + texture * 0.2 + click;
+                    }
+                    const source = audioCtx.createBufferSource();
+                    source.buffer = buffer;
+                    const gainNode = audioCtx.createGain();
+                    gainNode.gain.value = 0.40 * VOLUME_MULTIPLIER;
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+                    const filter = audioCtx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 2500;
+                    filter.Q.value = 2;
+                    source.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(audioCtx.destination);
+                    source.start();
+                    source.stop(audioCtx.currentTime + 0.05);
+                } catch (e) {}
+            }
+
+            function playWinSound() {
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const notes = [523, 659, 784, 1047];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        gain.gain.value = 0.20 * VOLUME_MULTIPLIER;
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2 + i * 0.12);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(audioCtx.currentTime + i * 0.12);
+                        osc.stop(audioCtx.currentTime + 0.2 + i * 0.12);
+                    });
+                } catch (e) {}
+            }
+
+            function playLossSound() {
+                try {
+                    initAudio();
+                    if (audioCtx.state === 'suspended') audioCtx.resume();
+                    const notes = [400, 300, 200];
+                    notes.forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = freq;
+                        gain.gain.value = 0.25 * VOLUME_MULTIPLIER;
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2 + i * 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(audioCtx.currentTime + i * 0.15);
+                        osc.stop(audioCtx.currentTime + 0.2 + i * 0.15);
+                    });
+                } catch (e) {}
+            }
+
+            // GAME STATE
+            let board = ['', '', '', '', '', '', '', '', ''];
+            let currentPlayer = 'X';
+            let gameActive = false;
+            let balance = (window.PK96 && typeof window.PK96.getBalance === 'function') 
+                ? window.PK96.getBalance() 
+                : parseFloat(localStorage.getItem('tiktakwin_balance') || '0');
+            let currentBet = 100;
+            let isBotTurn = false;
+            let gameResult = null;
+            let roundInProgress = false;
+            let alienStarts = false;
+            let previousResult = null; // Track previous round result
+
+            // HELPERS
+            function updateBalanceUI() {
+                if (window.PK96 && typeof window.PK96.getBalance === 'function') {
+                    balance = window.PK96.getBalance();
+                } else {
+                    const saved = localStorage.getItem('tiktakwin_balance');
+                    if (saved && !isNaN(parseFloat(saved))) balance = parseFloat(saved);
+                }
+                balanceEl.textContent = balance.toLocaleString();
+            }
+
+            function saveBalance() {
+                if (window.PK96 && typeof window.PK96.setBalance === 'function') {
+                    window.PK96.setBalance(balance);
+                } else {
+                    localStorage.setItem('tiktakwin_balance', balance.toString());
+                }
+                balanceEl.textContent = balance.toLocaleString();
+            }
+            window.addEventListener('pk96_balance_changed', () => updateBalanceUI());
+            window.addEventListener('storage', () => updateBalanceUI());
+
+            function updateBetUI() {
+                betDisplay.textContent = currentBet;
+                betSlider.value = currentBet;
+                quickBtns.forEach(btn => {
+                    const val = parseInt(btn.dataset.bet);
+                    btn.classList.toggle('active', val === currentBet);
+                });
+            }
+
+            function syncBet() {
+                currentBet = parseInt(betSlider.value);
+                if (isNaN(currentBet) || currentBet < 10) currentBet = 10;
+                if (currentBet > balance) currentBet = Math.max(10, balance);
+                betSlider.value = currentBet;
+                updateBetUI();
+            }
+
+            // WIN DETECTION
+            function checkWin(boardArray, player) {
+                const patterns = [
+                    [0,1,2],[3,4,5],[6,7,8],
+                    [0,3,6],[1,4,7],[2,5,8],
+                    [0,4,8],[2,4,6]
+                ];
+                for (let p of patterns) {
+                    const [a,b,c] = p;
+                    if (boardArray[a] === player && boardArray[b] === player && boardArray[c] === player) {
+                        return p;
+                    }
+                }
+                return null;
+            }
+
+            function isBoardFull(boardArray) {
+                return boardArray.every(cell => cell !== '');
+            }
+
+            // MINIMAX AI
+            function minimax(boardArray, depth, isMaximizing, alpha = -Infinity, beta = Infinity) {
+                const winX = checkWin(boardArray, 'X');
+                const winO = checkWin(boardArray, 'O');
+                if (winX) return -10 + depth;
+                if (winO) return 10 - depth;
+                if (isBoardFull(boardArray)) return 0;
+                
+                if (isMaximizing) {
+                    let best = -Infinity;
+                    for (let i = 0; i < 9; i++) {
+                        if (boardArray[i] === '') {
+                            boardArray[i] = 'O';
+                            const score = minimax(boardArray, depth + 1, false, alpha, beta);
+                            boardArray[i] = '';
+                            best = Math.max(score, best);
+                            alpha = Math.max(alpha, best);
+                            if (beta <= alpha) break;
+                        }
+                    }
+                    return best;
+                } else {
+                    let best = Infinity;
+                    for (let i = 0; i < 9; i++) {
+                        if (boardArray[i] === '') {
+                            boardArray[i] = 'X';
+                            const score = minimax(boardArray, depth + 1, true, alpha, beta);
+                            boardArray[i] = '';
+                            best = Math.min(score, best);
+                            beta = Math.min(beta, best);
+                            if (beta <= alpha) break;
+                        }
+                    }
+                    return best;
+                }
+            }
+
+            function getBestBotMove(boardArray) {
+                let bestScore = -Infinity;
+                let bestMove = -1;
+                for (let i = 0; i < 9; i++) {
+                    if (boardArray[i] === '') {
+                        boardArray[i] = 'O';
+                        const score = minimax(boardArray, 0, false);
+                        boardArray[i] = '';
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = i;
+                        }
+                    }
+                }
+                return bestMove;
+            }
+
+            // MULTIPLIER
+            function getRandomMultiplier() {
+                const rand = Math.random();
+                if (rand < 0.60) return Math.floor(Math.random() * 3) + 1;
+                else if (rand < 0.82) return Math.floor(Math.random() * 3) + 4;
+                else if (rand < 0.94) return Math.floor(Math.random() * 4) + 7;
+                else if (rand < 0.98) return Math.floor(Math.random() * 10) + 11;
+                else return Math.floor(Math.random() * 30) + 21;
+            }
+
+            // RESULT POPUP
+            function showResult(type, amount, multiplier) {
+                const overlay = document.getElementById('resultOverlay');
+                
+                if (type === 'win') {
+                    resultIcon.textContent = '🏆';
+                    resultTitle.textContent = '🎉 You Win!';
+                    resultSub.textContent = `×${multiplier} Multiplier`;
+                    resultAmount.textContent = `+${amount}`;
+                    resultAmount.style.color = '#4caf50';
+                    playWinSound();
+                } else if (type === 'loss') {
+                    resultIcon.textContent = '👾';
+                    resultTitle.textContent = 'Alien AI Wins!';
+                    resultSub.textContent = 'Better luck next time';
+                    resultAmount.textContent = `-${amount}`;
+                    resultAmount.style.color = '#ff6b6b';
+                    playLossSound();
+                } else if (type === 'draw') {
+                    resultIcon.textContent = '🤝';
+                    resultTitle.textContent = "It's a Draw!";
+                    resultSub.textContent = 'Half bet returned';
+                    resultAmount.textContent = `-${amount}`;
+                    resultAmount.style.color = '#f7c948';
+                    try {
+                        initAudio();
+                        if (audioCtx.state === 'suspended') audioCtx.resume();
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.value = 600;
+                        gain.gain.value = 0.20 * VOLUME_MULTIPLIER;
+                        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start();
+                        osc.stop(audioCtx.currentTime + 0.3);
+                    } catch (e) {}
+                }
+                
+                overlay.classList.add('show');
+            }
+
+            function hideResult() {
+                document.getElementById('resultOverlay').classList.remove('show');
+            }
+
+            // CORE GAME LOGIC
+            function startRound() {
+                if (roundInProgress) return;
+                if (balance < currentBet) {
+                    statusEl.textContent = '⚠️ Insufficient crystals!';
+                    return;
+                }
+                
+                // Determine who starts based on previous result
+                // Alien starts if: previous was draw OR bet is in [250, 500, 1000]
+                if (previousResult === 'draw' || [250, 500, 1000].includes(currentBet)) {
+                    alienStarts = true;
+                } else {
+                    alienStarts = false;
+                }
+                
+                // Deduct bet
+                balance -= currentBet;
+                saveBalance();
+                
+                // Reset board
+                board = ['', '', '', '', '', '', '', '', ''];
+                gameActive = true;
+                roundInProgress = true;
+                gameResult = null;
+                isBotTurn = false;
+                
+                cells.forEach(cell => {
+                    cell.className = 'cell';
+                    cell.textContent = '';
+                });
+                
+                renderBoard();
+                
+                if (alienStarts) {
+                    // Alien starts first
+                    currentPlayer = 'O';
+                    statusEl.textContent = '👾 Alien starts first!';
+                    disableBoard(true);
+                    confirmBetBtn.disabled = true;
+                    confirmBetBtn.textContent = '⏳ GAME IN PROGRESS';
+                    betSlider.disabled = true;
+                    quickBtns.forEach(b => b.disabled = true);
+                    
+                    // Make alien move after a short delay
+                    setTimeout(function() {
+                        if (!gameActive) return;
+                        const botIndex = getBestBotMove(board);
+                        if (botIndex !== -1 && board[botIndex] === '') {
+                            board[botIndex] = 'O';
+                            playBotSound();
+                            renderBoard();
+                            
+                            const botWinPattern = checkWin(board, 'O');
+                            if (botWinPattern) {
+                                gameActive = false;
+                                roundInProgress = false;
+                                highlightWin(botWinPattern);
+                                // Additional penalty: player pays again on loss
+                                balance -= currentBet;
+                                if (balance < 0) balance = 0;
+                                saveBalance();
+                                statusEl.textContent = `👾 Alien wins! -${currentBet * 2}`;
+                                disableBoard(true);
+                                gameResult = 'loss';
+                                previousResult = 'loss';
+                                setTimeout(() => {
+                                    showResult('loss', currentBet * 2, 0);
+                                }, 400);
+                                endRound();
+                                return;
+                            }
+                            
+                            if (isBoardFull(board)) {
+                                gameActive = false;
+                                roundInProgress = false;
+                                const halfBet = Math.ceil(currentBet / 2);
+                                balance -= halfBet;
+                                if (balance < 0) balance = 0;
+                                saveBalance();
+                                statusEl.textContent = `🤝 Draw! -${halfBet}`;
+                                disableBoard(true);
+                                gameResult = 'draw';
+                                previousResult = 'draw';
+                                setTimeout(() => {
+                                    showResult('draw', halfBet, 0);
+                                }, 400);
+                                endRound();
+                                return;
+                            }
+                            
+                            currentPlayer = 'X';
+                            statusEl.textContent = '🧑 Your turn';
+                            disableBoard(false);
+                            isBotTurn = false;
+                        }
+                    }, 400);
+                } else {
+                    // Player starts
+                    currentPlayer = 'X';
+                    statusEl.textContent = '🧑 Your turn';
+                    disableBoard(false);
+                }
+                
+                confirmBetBtn.disabled = true;
+                confirmBetBtn.textContent = '⏳ GAME IN PROGRESS';
+                betSlider.disabled = true;
+                quickBtns.forEach(b => b.disabled = true);
+                syncBet();
+            }
+
+            function makeMove(index, player) {
+                if (!gameActive) return false;
+                if (board[index] !== '') return false;
+                if (player !== currentPlayer) return false;
+                if (isBotTurn) return false;
+
+                if (player === 'X') {
+                    playPlayerSound();
+                }
+
+                board[index] = player;
+                renderBoard();
+
+                const winPattern = checkWin(board, player);
+                if (winPattern) {
+                    gameActive = false;
+                    roundInProgress = false;
+                    highlightWin(winPattern);
+                    
+                    if (player === 'X') {
+                        const multiplier = getRandomMultiplier();
+                        const winAmount = Math.floor(currentBet * multiplier);
+                        balance += winAmount;
+                        saveBalance();
+                        statusEl.textContent = `🏆 +${winAmount}`;
+                        gameResult = 'win';
+                        previousResult = 'win';
+                        setTimeout(() => {
+                            showResult('win', winAmount, multiplier);
+                        }, 400);
+                    } else {
+                        // Bot win - additional penalty: player pays again
+                        balance -= currentBet;
+                        if (balance < 0) balance = 0;
+                        updateBalanceUI();
+                        statusEl.textContent = `👾 Alien wins! -${currentBet * 2}`;
+                        gameResult = 'loss';
+                        previousResult = 'loss';
+                        setTimeout(() => {
+                            showResult('loss', currentBet * 2, 0);
+                        }, 400);
+                    }
+                    disableBoard(true);
+                    endRound();
+                    return true;
+                }
+
+                if (isBoardFull(board)) {
+                    gameActive = false;
+                    roundInProgress = false;
+                    const halfBet = Math.ceil(currentBet / 2);
+                    balance -= halfBet;
+                    if (balance < 0) balance = 0;
+                    updateBalanceUI();
+                    statusEl.textContent = `🤝 Draw! -${halfBet}`;
+                    gameResult = 'draw';
+                    previousResult = 'draw';
+                    setTimeout(() => {
+                        showResult('draw', halfBet, 0);
+                    }, 400);
+                    disableBoard(true);
+                    endRound();
+                    return true;
+                }
+
+                currentPlayer = (currentPlayer === 'X') ? 'O' : 'X';
+                renderBoard();
+
+                if (gameActive && currentPlayer === 'O') {
+                    isBotTurn = true;
+                    statusEl.textContent = '👾 Alien thinking...';
+                    disableBoard(true);
+                    
+                    setTimeout(function() {
+                        if (!gameActive) {
+                            isBotTurn = false;
+                            return;
+                        }
+                        
+                        const botIndex = getBestBotMove(board);
+                        if (botIndex !== -1 && board[botIndex] === '') {
+                            board[botIndex] = 'O';
+                            playBotSound();
+                            renderBoard();
+                            
+                            const botWinPattern = checkWin(board, 'O');
+                            if (botWinPattern) {
+                                gameActive = false;
+                                roundInProgress = false;
+                                highlightWin(botWinPattern);
+                                // Additional penalty: player pays again on loss
+                                balance -= currentBet;
+                                if (balance < 0) balance = 0;
+                                updateBalanceUI();
+                                statusEl.textContent = `👾 Alien wins! -${currentBet * 2}`;
+                                disableBoard(true);
+                                isBotTurn = false;
+                                gameResult = 'loss';
+                                previousResult = 'loss';
+                                setTimeout(() => {
+                                    showResult('loss', currentBet * 2, 0);
+                                }, 400);
+                                endRound();
+                                return;
+                            }
+                            
+                            if (isBoardFull(board)) {
+                                gameActive = false;
+                                roundInProgress = false;
+                                const halfBet = Math.ceil(currentBet / 2);
+                                balance -= halfBet;
+                                if (balance < 0) balance = 0;
+                                updateBalanceUI();
+                                statusEl.textContent = `🤝 Draw! -${halfBet}`;
+                                disableBoard(true);
+                                isBotTurn = false;
+                                gameResult = 'draw';
+                                previousResult = 'draw';
+                                setTimeout(() => {
+                                    showResult('draw', halfBet, 0);
+                                }, 400);
+                                endRound();
+                                return;
+                            }
+                            
+                            currentPlayer = 'X';
+                            statusEl.textContent = '🧑 Your turn';
+                            disableBoard(false);
+                            isBotTurn = false;
+                        } else {
+                            if (isBoardFull(board)) {
+                                gameActive = false;
+                                roundInProgress = false;
+                                const halfBet = Math.ceil(currentBet / 2);
+                                balance -= halfBet;
+                                if (balance < 0) balance = 0;
+                                updateBalanceUI();
+                                statusEl.textContent = `🤝 Draw! -${halfBet}`;
+                                disableBoard(true);
+                                gameResult = 'draw';
+                                previousResult = 'draw';
+                                setTimeout(() => {
+                                    showResult('draw', halfBet, 0);
+                                }, 400);
+                                endRound();
+                            }
+                            isBotTurn = false;
+                        }
+                    }, 300);
+                } else {
+                    statusEl.textContent = '🧑 Your turn';
+                    disableBoard(false);
+                }
+                return true;
+            }
+
+            function endRound() {
+                confirmBetBtn.disabled = false;
+                confirmBetBtn.textContent = '🚀 PLACE BET & START';
+                betSlider.disabled = false;
+                quickBtns.forEach(b => b.disabled = false);
+                syncBet();
+            }
+
+            // UI RENDER
+            function renderBoard() {
+                cells.forEach((cell, idx) => {
+                    const val = board[idx];
+                    cell.textContent = val;
+                    cell.className = 'cell';
+                    if (val === 'X') cell.classList.add('X-move');
+                    else if (val === 'O') cell.classList.add('O-move');
+                });
+            }
+
+            function highlightWin(pattern) {
+                if (!pattern) return;
+                pattern.forEach(idx => {
+                    cells[idx].classList.add('win-highlight');
+                });
+            }
+
+            function disableBoard(disabled) {
+                cells.forEach(cell => {
+                    if (disabled) {
+                        cell.classList.add('disabled-cell');
+                    } else {
+                        cell.classList.remove('disabled-cell');
+                    }
+                });
+            }
+
+            function resetBoard() {
+                hideResult();
+                isBotTurn = false;
+                gameResult = null;
+                roundInProgress = false;
+                gameActive = false;
+                alienStarts = false;
+                // Don't reset previousResult on reset - keep it for next round logic
+                board = ['', '', '', '', '', '', '', '', ''];
+                currentPlayer = 'X';
+                cells.forEach(cell => {
+                    cell.className = 'cell';
+                    cell.textContent = '';
+                });
+                disableBoard(true);
+                statusEl.textContent = '🎲 Place bet to start';
+                confirmBetBtn.disabled = false;
+                confirmBetBtn.textContent = '🚀 PLACE BET & START';
+                betSlider.disabled = false;
+                quickBtns.forEach(b => b.disabled = false);
+                syncBet();
+            }
+
+            // EVENT LISTENERS
+            betSlider.addEventListener('input', function() {
+                if (roundInProgress) return;
+                let val = parseInt(this.value);
+                if (isNaN(val) || val < 10) val = 10;
+                if (val > balance) val = Math.max(10, balance);
+                this.value = val;
+                currentBet = val;
+                updateBetUI();
+            });
+
+            quickBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (roundInProgress) return;
+                    const val = parseInt(this.dataset.bet);
+                    if (!isNaN(val) && val > 0) {
+                        const finalBet = Math.min(val, balance);
+                        betSlider.value = finalBet;
+                        currentBet = finalBet;
+                        updateBetUI();
+                    }
+                });
+            });
+
+            confirmBetBtn.addEventListener('click', function() {
+                if (roundInProgress) return;
+                if (balance < currentBet) {
+                    statusEl.textContent = '⚠️ Not enough crystals!';
+                    return;
+                }
+                startRound();
+            });
+
+            cells.forEach((cell, index) => {
+                cell.addEventListener('click', function(e) {
+                    if (!gameActive) return;
+                    if (currentPlayer !== 'X') return;
+                    if (board[index] !== '') return;
+                    if (this.classList.contains('disabled-cell')) return;
+                    if (isBotTurn) return;
+                    makeMove(index, 'X');
+                });
+            });
+
+            resetBtn.addEventListener('click', function() {
+                if (roundInProgress) {
+                    gameActive = false;
+                    roundInProgress = false;
+                    isBotTurn = false;
+                }
+                resetBoard();
+                // Reset previousResult on manual reset
+                previousResult = null;
+                if (currentBet > balance) { 
+                    currentBet = Math.max(10, balance); 
+                    betSlider.value = currentBet; 
+                    updateBetUI(); 
+                }
+                statusEl.textContent = '🎲 Place bet to start';
+                confirmBetBtn.disabled = false;
+                confirmBetBtn.textContent = '🚀 PLACE BET & START';
+                betSlider.disabled = false;
+                quickBtns.forEach(b => b.disabled = false);
+                hideResult();
+                syncBet();
+            });
+
+            resultBtn.addEventListener('click', function() {
+                resetBoard();
+                // Keep previousResult for next round logic
+                if (currentBet > balance) { 
+                    currentBet = Math.max(10, balance); 
+                    betSlider.value = currentBet; 
+                    updateBetUI(); 
+                }
+                statusEl.textContent = '🎲 Place bet to start';
+                confirmBetBtn.disabled = false;
+                confirmBetBtn.textContent = '🚀 PLACE BET & START';
+                betSlider.disabled = false;
+                quickBtns.forEach(b => b.disabled = false);
+                hideResult();
+                syncBet();
+            });
+
+            document.getElementById('resultOverlay').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    resetBoard();
+                    if (currentBet > balance) { 
+                        currentBet = Math.max(10, balance); 
+                        betSlider.value = currentBet; 
+                        updateBetUI(); 
+                    }
+                    statusEl.textContent = '🎲 Place bet to start';
+                    confirmBetBtn.disabled = false;
+                    confirmBetBtn.textContent = '🚀 PLACE BET & START';
+                    betSlider.disabled = false;
+                    quickBtns.forEach(b => b.disabled = false);
+                    syncBet();
+                }
+            });
+
+            // INIT
+            function init() {
+                updateBalanceUI();
+                currentBet = 100;
+                betSlider.value = 100;
+                updateBetUI();
+                previousResult = null;
+                resetBoard();
+                statusEl.textContent = '🎲 Place bet to start';
+                confirmBetBtn.disabled = false;
+                confirmBetBtn.textContent = '🚀 PLACE BET & START';
+                betSlider.disabled = false;
+                quickBtns.forEach(b => b.disabled = false);
+                syncBet();
+            }
+            init();
+        })();
+    </script>
+</body>
+</html>
