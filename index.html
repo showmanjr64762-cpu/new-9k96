@@ -71,12 +71,14 @@
             if (typeof window._internalHandleDepositAction === 'function') {
                 return window._internalHandleDepositAction(e);
             }
-            if (!window.isUserLoggedIn()) {
-                const loginModal = document.getElementById('loginModal');
-                if (loginModal) window.openModal(loginModal);
-                if (typeof window.showLobbyToast === 'function') {
-                    window.showLobbyToast('Please log in to deposit!');
-                }
+  const loggedIn = typeof window.checkIsUserLoggedIn === 'function'
+    ? window.checkIsUserLoggedIn()
+    : (typeof window.isUserLoggedIn === 'function' && window.isUserLoggedIn());
+  if (!loggedIn) {
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal && typeof window.openModal === 'function') window.openModal(loginModal);
+    return false;
+  }
                 return;
             }
             const withdrawModalBalance = document.getElementById('withdrawModalBalance');
@@ -7365,8 +7367,11 @@
             if (typeof window.closeAnswerSheet === 'function') window.closeAnswerSheet();
 
             if (modal.id === 'depositModal' || modal.id === 'withdrawModal') {
-                if (!checkIsUserLoggedIn()) {
-                    const loginModal = document.getElementById('loginModal');
+  const loggedIn = typeof checkIsUserLoggedIn === 'function'
+  ? checkIsUserLoggedIn()
+  : (typeof window.isUserLoggedIn === 'function' && window.isUserLoggedIn());
+  if (!loggedIn) {
+  const loginModal = document.getElementById('loginModal');
                     if (loginModal) {
                         loginModal.style.display = 'flex';
                         loginModal.classList.add('active');
@@ -17463,7 +17468,10 @@
                 e.preventDefault();
                 e.stopPropagation();
             }
-            if (!isUserLoggedIn()) {
+            const loggedIn = typeof isUserLoggedIn === 'function'
+                ? isUserLoggedIn()
+                : (typeof window.isUserLoggedIn === 'function' && window.isUserLoggedIn());
+            if (!loggedIn) {
                 const loginModal = document.getElementById('loginModal');
                 if (loginModal) openModal(loginModal);
                 if (typeof showLobbyToast === 'function') {
