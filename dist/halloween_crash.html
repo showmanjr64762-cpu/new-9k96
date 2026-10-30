@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+  <head>
+<script>
+// PK96 Clean Zero Balance & Credit Lock
+(function() {
+  'use strict';
+
+  var zeroKeys = [
+    'balance', 'credits', 'credit', 'c2balance', 'c3balance', 'coins', 'coin',
+    'player_balance', 'user_balance', 'demo_balance', 'initial_balance',
+    'final_survival_balance', 'football_bet_balance', 'halloween_crash_balance',
+    'dwarves_mine_balance', '10000_bc_balance', 'mayan_temple_balance',
+    'total_coins', 'game_balance', 'pk96_balance', 'pk96_guest_balance',
+    'chips', 'userbalance', 'pnc_demo_balance', 'money'
+  ];
+
+  var origGetItem = Storage.prototype.getItem;
+  var origSetItem = Storage.prototype.setItem;
+
+  Storage.prototype.getItem = function(k) {
+    if (!k || typeof k !== 'string') return origGetItem.apply(this, arguments);
+    var lk = k.toLowerCase().trim();
+
+    // Safely zero balances inside C3 localstorage without corrupting dictionary
+    if (lk === 'c3-localstorage') {
+      var raw = origGetItem.apply(this, arguments);
+      if (raw) {
+        try {
+          var parsed = JSON.parse(raw);
+          if (parsed && typeof parsed === 'object') {
+            for (var key in parsed) {
+              if (/^(balance|credits?|coins?|cash|money|setting_start_credits)$/i.test(key)) {
+                parsed[key] = 0;
+              }
+            }
+            return JSON.stringify(parsed);
+          }
+        } catch(e) {}
+      }
+      return raw;
+    }
+
+    if (zeroKeys.indexOf(lk) !== -1) return '0';
+    return origGetItem.apply(this, arguments);
+  };
+
+  Storage.prototype.setItem = function(k, v) {
+    if (k && typeof k === 'string') {
+      var lk = k.toLowerCase().trim();
+      if (zeroKeys.indexOf(lk) !== -1) {
+        return origSetItem.call(this, k, '0');
+      }
+    }
+    return origSetItem.apply(this, arguments);
+  };
+
+  // Pre-seed storage
+  zeroKeys.forEach(function(k) {
+    try { origSetItem.call(localStorage, k, '0'); } catch(e) {}
+  });
+
+  // Safe remote.php handler (Dwarves Mine, 10000 BC) - NEVER touches other fetches
+  var origFetch = window.fetch;
+  if (typeof origFetch === 'function') {
+    window.fetch = function(url, opts) {
+      if (typeof url === 'string' && url.indexOf('remote.php') !== -1) {
+        return Promise.resolve(new Response(JSON.stringify({
+          userBalance: 0,
+          userBalanceBefore: 0,
+          userBalanceAfter: 0,
+          winnings: 0
+        }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+      }
+      return origFetch.apply(window, arguments);
+    };
+  }
+
+  // Global variables zeroing
+  window.userBalance = 0;
+  window.INITIAL_BALANCE = 0;
+  window.defaultCoins = 0;
+  window.defaultAmount = 0;
+
+  // AppState hook
+  window.AppState = window.AppState || {};
+  try {
+    Object.defineProperty(window.AppState, 'balance', {
+      get: function() { return 0; },
+      set: function() {},
+      configurable: true
+    });
+  } catch(e) {}
+
+  // Construct 3 hook - safely zeros variables on tick & beforeprojectstart
+  var origRunOnStartup = window.runOnStartup;
+  window.runOnStartup = function(cb) {
+    var wrapped = async function(runtime) {
+      window.c3_runtime = runtime;
+      var zeroC3 = function() {
+        try {
+          if (runtime && runtime.globalVars) {
+            for (var k in runtime.globalVars) {
+              if (/^(balance|credits?|coins?|cash|chips?|money|setting_start_credits)$/i.test(k)) {
+                runtime.globalVars[k] = 0;
+              }
+            }
+          }
+        } catch(e) {}
+      };
+      zeroC3();
+      if (runtime && runtime.addEventListener) {
+        runtime.addEventListener('beforeprojectstart', zeroC3);
+        runtime.addEventListener('tick', zeroC3);
+      }
+      return cb(runtime);
+    };
+    if (typeof origRunOnStartup === 'function') {
+      return origRunOnStartup(wrapped);
+    }
+  };
+
+  // Continuous text enforcer for DOM and canvas text
+  function enforceZero() {
+    var selectors = [
+      '.desktop-balance-val', '.mobile-balance-val', '.balance-value',
+      '#balance-value', '#balance-display', '#user-balance', '#player-balance',
+      '.player-balance', '.balance-text', '[data-field="balance"]',
+      '#balance_text', '.balance', '#balance', '.credit', '.credits',
+      '.credit-val', '.coins-val', '#coins-display', '#credits-display',
+      '.chips-value', '#chips', '.credits-amount', '.balance-amount'
+    ];
+    document.querySelectorAll(selectors.join(',')).forEach(function(el) {
+      if (el.textContent !== '0.00' && el.textContent !== '0' && el.textContent !== 'Rs 0.00' && el.textContent !== '$0.00' && el.textContent !== '€0.00') {
+        el.textContent = '0.00';
+      }
+    });
+
+    try {
+      if (window.app && window.app.fields && window.app.fields.balance) {
+        window.app.fields.balance.text = '0.00';
+      }
+      if (window.slotControls && window.slotControls.creditText) {
+        window.slotControls.creditText.text = '0.00';
+      }
+    } catch(e) {}
+  }
+
+  setInterval(enforceZero, 50);
+  document.addEventListener('DOMContentLoaded', enforceZero);
+})();
+</script>
+
+<style>
+/* Remove top labels showing balance from the game */
+.balance-container, #balance-card, #mobile-top-header .balance-container,
+.desktop-balance-val, .mobile-balance-val, .balance-label,
+#balance-display, #balance-value, #user-balance, #player-balance,
+.player-balance, .balance-text, [data-field="balance"], #balance_text,
+.balance-badge, .header-balance, .balance-box, .balance-chip,
+header .balance, .top-bar-balance, .game-header-balance,
+.balance-wrapper, .balance-holder, #top-balance, #balanceCard,
+.c-balance, .c-balance-display, #pnc-balance-container {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+</style>
+
+<base href="https://previews.customer.envatousercontent.com/files/827982419/">
+  <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/royalmatch64762-spec/images-@main/lobby.png?raw=true">
+  <style>
+    
+    
+  </style>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Halloween Crash</title>
+    <meta name="description" content="Halloween themed crash game with real-time PixiJS graphics, multiplier history, and dual bet controls." />
+    <meta property="og:title" content="Halloween Crash" />
+    <meta property="og:description" content="Halloween themed crash game with real-time PixiJS graphics, multiplier history, and dual bet controls." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+<div id="app-container">
+      <div id="game-frame">
+        <!-- Sidebar Panel (Desktop layout & Drawer support) -->
+        <aside id="sidebar-panel">
+          <!-- Desktop Sidebar Header with Balance & Actions -->
+          <div class="sidebar-header-box" id="balance-card">
+            <div class="balance-container">
+              <span class="balance-label">Balance</span>
+              <span class="balance-value desktop-balance-val">0.00</span>
+            </div>
+            <div class="header-actions">
+              <div class="player-profile-chip" id="player-profile-chip-desktop" title="Click to edit nickname">
+                <span class="player-avatar">🎃</span>
+                <span class="player-name-display desktop-player-name">user23546789</span>
+              </div>
+              <button id="btn-menu-desktop" class="header-action-btn btn-menu-trigger" aria-label="Open Game Menu" title="Game Menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Bets Tabs Section -->
+          <div class="sidebar-bets-section" id="bets-history-panel">
+            <div class="bets-tabs" id="bets-tabs-container">
+              <button type="button" class="tab-btn active" data-tab="all">All Bets</button>
+              <button type="button" class="tab-btn" data-tab="my">My Bets</button>
+              <button type="button" class="tab-btn" data-tab="highest">Highest</button>
+            </div>
+            <div class="bets-table-header" id="bets-table-header">
+              <span class="header-col-player">Player</span>
+              <span class="header-col-bet">Bet</span>
+              <span class="header-col-x">X</span>
+              <span class="header-col-win">Win</span>
+            </div>
+            <div id="bets-list-container" class="bets-list-container">
+              <!-- Live bets injected dynamically -->
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content (Game Section) -->
+        <main id="main-content">
+          <!-- Mobile Top Header Bar -->
+          <header id="mobile-top-header">
+            <div class="balance-container">
+              <span class="balance-label">Balance</span>
+              <span class="balance-value mobile-balance-val">0.00</span>
+            </div>
+            <div class="header-actions">
+              <div class="player-profile-chip" id="player-profile-chip-mobile" title="Click to edit nickname">
+                <span class="player-avatar">🎃</span>
+                <span class="player-name-display mobile-player-name">user23546789</span>
+              </div>
+              <button id="btn-menu-mobile" class="header-action-btn btn-menu-trigger" aria-label="Open Game Menu" title="Game Menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </button>
+            </div>
+          </header>
+
+          <!-- Pixi.js Canvas Stage Wrapper -->
+          <div id="canvas-stage-wrapper">
+            <canvas id="game-canvas"></canvas>
+            <button id="btn-fullscreen" class="canvas-fullscreen-btn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">
+              <svg class="icon-expand" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+              </svg>
+              <svg class="icon-compress" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Multiplier History Bar -->
+          <div id="history-bar-container">
+            <div class="history-indicator-dot" title="Live Multipliers"></div>
+            <div id="history-pills-list">
+              <!-- Multiplier badges populated dynamically -->
+            </div>
+            <button id="btn-history-chart" class="history-stats-btn" title="Provably Fair Stats">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+              <span>History</span>
+            </button>
+          </div>
+
+          <!-- Dual Bet Control Panels -->
+          <div id="bet-panels-container">
+            <!-- Bet Panel 1 -->
+            <div class="bet-panel" id="panel1">
+              <!-- Panel Top Toggles: Auto Bet | Auto Cash Out -->
+              <div class="bet-row-auto">
+                <button type="button" class="auto-toggle-btn" id="p1-toggle-autobet" title="Toggle Auto Bet">
+                  <span class="auto-toggle-text">Auto Bet</span>
+                  <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                </button>
+                <div class="auto-cashout-group">
+                  <button type="button" class="auto-toggle-btn" id="p1-toggle-autocash" title="Toggle Auto Cashout">
+                    <span class="auto-toggle-text">Auto Cash Out</span>
+                    <div class="toggle-track">
+                      <div class="toggle-thumb"></div>
+                    </div>
+                  </button>
+                  <div class="auto-mult-box disabled" id="p1-mult-box">
+                    <input type="number" class="auto-mult-input" id="p1-auto-mult" value="2.00" step="0.10" min="1.01" disabled />
+                    <span class="mult-unit">x</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Bet Input & Action Grid -->
+              <div class="bet-body-grid">
+                <div class="bet-inputs-column">
+                  <div class="bet-input-box">
+                    <button type="button" class="btn-step btn-minus" aria-label="Decrease Bet">-</button>
+                    <div class="input-inner-wrapper">
+                      <span class="currency-tag">€</span>
+                      <input type="number" class="bet-input-field" id="p1-bet-input" value="0.10" step="0.10" min="0.10" />
+                    </div>
+                    <button type="button" class="btn-step btn-plus" aria-label="Increase Bet">+</button>
+                  </div>
+                  <!-- Preset Buttons Row -->
+                  <div class="bet-row-presets">
+                    <button type="button" class="btn-preset" data-action="add" data-val="1">+1</button>
+                    <button type="button" class="btn-preset" data-action="add" data-val="5">+5</button>
+                    <button type="button" class="btn-preset" data-action="add" data-val="20">+20</button>
+                    <button type="button" class="btn-preset" data-action="add" data-val="100">+100</button>
+                    <button type="button" class="btn-preset btn-preset-action" data-action="half">½</button>
+                    <button type="button" class="btn-preset btn-preset-action" data-action="double">2X</button>
+                  </div>
+                </div>
+                <button type="button" class="btn-start-action" id="p1-btn-action">Bet</button>
+              </div>
+            </div>
+
+            <!-- Bet Panel 2 -->
+            <div class="bet-panel" id="panel2">
+              <!-- Panel Top Toggles: Auto Bet | Auto Cash Out -->
+              <div class="bet-row-auto">
+                <button type="button" class="auto-toggle-btn" id="p2-toggle-autobet" title="Toggle Auto Bet">
+                  <span class="auto-toggle-text">Auto Bet</span>
+                  <div class="toggle-track">
+                    <div class="toggle-thumb"></div>
+                  </div>
+                </button>
+                <div class="auto-cashout-group">
+                  <button type="button" class="auto-toggle-btn" id="p2-toggle-autocash" title="Toggle Auto Cashout">
+                    <span class="auto-toggle-text">Auto Cash Out</span>
+                    <div class="toggle-track">
+                      <div class="toggle-thumb"></div>
+                    </div>
+                  </button>
+                  <div class="auto-mult-box disabled" id="p2-mult-box">
+                    <input type="number" class="auto-mult-input" id="p2-auto-mult" value="2.00" step="0.10" min="1.01" disabled />
+                    <span class="mult-unit">x</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Bet Input & Action Grid -->
+              <div class="bet-body-grid">
+                <div class="bet-inputs-column">
+                  <div class="bet-input-box">
+                    <button type="button" class="btn-step btn-minus" aria-label="Decrease Bet">-</button>
+                    <div class="input-inner-wrapper">
+                      <span class="currency-tag">€</span>
+                      <input type="number" class="bet-input-field" id="p2-bet-input" value="0.10" step="0.10" min="0.10" />
+                    </div>
+                    <button type="button" class="btn-step btn-plus" aria-label="Increase Bet">+</button>
+                  </div>
+                  <!-- Preset Buttons Row -->
+                  <div class="bet-row-presets">
+                    <button type="button" class="btn-preset" data-action="add" data-val="1">+1</button>
+                    <button type="button" class="btn-preset" data-action="add" data-val="5">+5</button>
+                    <button type="button" class="btn-preset" data-action="add" data-val="20">+20</button>
+                    <button type="button" class="btn-preset" data-action="add" data-val="100">+100</button>
+                    <button type="button" class="btn-preset btn-preset-action" data-action="half">½</button>
+                    <button type="button" class="btn-preset btn-preset-action" data-action="double">2X</button>
+                  </div>
+                </div>
+                <button type="button" class="btn-start-action" id="p2-btn-action">Bet</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile Bets Accordion Drawer (for viewing active bets on mobile view) -->
+          <div id="mobile-bets-drawer">
+            <button type="button" id="btn-toggle-mobile-bets" class="btn-toggle-bets-drawer">
+              <span>Live Players & Stakes</span>
+              <span id="mobile-bets-count" class="badge-count">0</span>
+              <svg class="chevron-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div id="mobile-bets-content" class="mobile-bets-content">
+              <div class="bets-tabs mobile-tabs">
+                <button type="button" class="tab-btn active" data-tab="all">All Bets</button>
+                <button type="button" class="tab-btn" data-tab="my">My Bets</button>
+                <button type="button" class="tab-btn" data-tab="highest">Highest</button>
+              </div>
+              <div id="mobile-bets-list-container" class="bets-list-container"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <!-- Multiplier Tooltip -->
+      <div id="multiplier-tooltip"></div>
+
+      <!-- Quick Toast Notification -->
+      <div id="toast-notification"></div>
+
+      <!-- Hamburger Menu Modal Dialog -->
+      <div class="modal-overlay" id="modal-menu">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <span class="modal-title">Game Settings & Menu</span>
+            <button class="modal-close-btn" id="btn-close-modal" aria-label="Close Menu">&times;</button>
+          </div>
+
+          <div class="modal-body">
+            <div class="setting-nickname-group">
+              <label for="input-player-nickname" class="nickname-label">Player Nickname</label>
+              <div class="nickname-input-wrapper">
+                <input type="text" id="input-player-nickname" class="nickname-input-field" maxlength="16" placeholder="e.g. user23546789" />
+                <button type="button" id="btn-save-nickname" class="btn-save-nickname">Save</button>
+              </div>
+            </div>
+
+            <div class="setting-row">
+              <span>Sound Effects</span>
+              <label class="switch-toggle">
+                <input type="checkbox" id="toggle-sound-checkbox" checked />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <span>Background Music</span>
+              <label class="switch-toggle">
+                <input type="checkbox" id="toggle-music-checkbox" checked />
+                <span class="slider-round"></span>
+              </label>
+            </div>
+
+            <button type="button" class="btn-modal-action" id="menu-item-fairness">
+              Provably Fair & RTP (97.00%)
+            </button>
+
+            <button type="button" class="btn-modal-action" id="menu-item-rules">
+              Game Rules & How to Play
+            </button>
+
+            <button type="button" class="btn-modal-action" id="menu-item-history">
+              Round Multiplier History
+            </button>
+
+            <!-- Demo balance button removed for live lobby balance -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Dialog Sub-Modal (Provably Fair, Rules, History) -->
+      <div class="modal-overlay" id="sub-modal-info">
+        <div class="modal-dialog">
+          <div class="modal-header">
+            <h3 class="modal-title" id="info-dialog-title">Game Information</h3>
+            <button class="modal-close-btn" id="btn-close-submodal">&times;</button>
+          </div>
+          <div id="info-dialog-body" class="modal-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="src/pixi.min.js"></script>
+    <script src="src/output.min.js"></script>
+  </body>
+</html>

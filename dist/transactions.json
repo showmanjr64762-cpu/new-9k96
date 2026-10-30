@@ -1,0 +1,76 @@
+{
+  "txn_dep_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485385133": {
+    "transaction_id": "txn_dep_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485385133",
+    "user_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "user_email": "asd@gmail.com",
+    "type": "DEPOSIT",
+    "amount": 20000,
+    "status": "COMPLETED",
+    "created_at": "2026-08-23T11:43:05.133Z"
+  },
+  "txn_bet_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485385133": {
+    "transaction_id": "txn_bet_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485385133",
+    "user_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "user_email": "asd@gmail.com",
+    "type": "BET",
+    "amount": 10289.2,
+    "status": "SETTLED",
+    "created_at": "2026-08-23T11:43:05.133Z"
+  },
+  "txn_bet_y3WX168SrzdCmml4h0XVCefgLFx1_1787485157327_7100": {
+    "transaction_id": "txn_bet_y3WX168SrzdCmml4h0XVCefgLFx1_1787485157327_7100",
+    "user_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "user_email": "asd@gmail.com",
+    "game_id": "casino_game",
+    "type": "BET",
+    "amount": 100,
+    "status": "SETTLED",
+    "created_at": "2026-08-23T11:43:05.530Z"
+  },
+  "txn_dep_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485407324": {
+    "transaction_id": "txn_dep_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485407324",
+    "user_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "user_email": "asd@gmail.com",
+    "type": "DEPOSIT",
+    "amount": 20500,
+    "status": "COMPLETED",
+    "created_at": "2026-08-23T11:43:27.324Z"
+  },
+  "txn_bet_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485407324": {
+    "transaction_id": "txn_bet_sync_y3WX168SrzdCmml4h0XVCefgLFx1_1787485407324",
+    "user_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "user_email": "asd@gmail.com",
+    "type": "BET",
+    "amount": 10289.2,
+    "status": "SETTLED",
+    "created_at": "2026-08-23T11:43:27.324Z"
+  },
+  "txn_dep_y3WX168SrzdCmml4h0XVCefgLFx1_1787485179526_8263": {
+    "transaction_id": "txn_dep_y3WX168SrzdCmml4h0XVCefgLFx1_1787485179526_8263",
+    "user_id": "y3WX168SrzdCmml4h0XVCefgLFx1",
+    "user_email": "asd@gmail.com",
+    "type": "DEPOSIT",
+    "amount": 500,
+    "status": "COMPLETED",
+    "created_at": "2026-08-23T11:43:27.757Z"
+  },
+  "txn_dep_usr_1789261423566_1789261423566_797": {
+    "transaction_id": "txn_dep_usr_1789261423566_1789261423566_797",
+    "user_id": "usr_1789261423566",
+    "user_email": "",
+    "type": "DEPOSIT",
+    "amount": 2000,
+    "status": "COMPLETED",
+    "created_at": "2026-09-13T01:03:43.566Z"
+  },
+  "txn_bet_usr_1789261423568_1789261423568_343": {
+    "transaction_id": "txn_bet_usr_1789261423568_1789261423568_343",
+    "user_id": "usr_1789261423568",
+    "user_email": "",
+    "game_id": "casino_game",
+    "type": "BET",
+    "amount": 6000,
+    "status": "SETTLED",
+    "created_at": "2026-09-13T01:03:43.568Z"
+  }
+}

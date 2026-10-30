@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Royal Match · Admin Dashboard</title>
+  <meta name="description" content="Admin management dashboard for Royal Match player accounts, deposits, withdrawals, VIP levels, and support tickets" />
+  <meta property="og:title" content="Royal Match · Admin Dashboard" />
+  <meta property="og:description" content="Admin management dashboard for Royal Match player accounts, deposits, withdrawals, VIP levels, and support tickets" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23064e3b'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='%23ffd700'%3E♛%3C/text%3E%3C/svg%3E" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: #0a0f1e; color: #fff; }
+
+    .header { background: linear-gradient(180deg, #0e1a2b 0%, #0a0f1e 100%); border-bottom: 2px solid #d4af37; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; flex-wrap: wrap; gap: 1rem; }
+    .logo { display: flex; align-items: center; gap: 1rem; }
+    .logo-icon { width: 45px; height: 45px; background: linear-gradient(145deg, #ffd700, #d4af37); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: #0a0f1e; }
+    .logo h1 { color: #ffd700; font-size: 1.3rem; }
+    .logo p { color: #888; font-size: 0.7rem; }
+    .live-badge { background: rgba(0, 255, 136, 0.2); color: #00ff88; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; display: flex; align-items: center; gap: 8px; }
+    .live-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+
+    .nav-tabs { display: flex; gap: 0.5rem; background: #0f1424; padding: 0.8rem 2rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); flex-wrap: wrap; overflow-x: auto; }
+    .nav-tab { padding: 0.6rem 1.2rem; background: transparent; border: none; color: #aaa; cursor: pointer; border-radius: 8px; font-size: 0.85rem; font-weight: 500; transition: all 0.3s; white-space: nowrap; }
+    .nav-tab:hover { background: rgba(212, 175, 55, 0.1); color: #ffd700; }
+    .nav-tab.active { background: rgba(212, 175, 55, 0.2); color: #ffd700; }
+
+    .main-content { padding: 1.5rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 1.2rem; }
+    .stat-header { display: flex; justify-content: space-between; margin-bottom: 0.8rem; }
+    .stat-title { color: #888; font-size: 0.75rem; text-transform: uppercase; }
+    .stat-icon { width: 40px; height: 40px; background: rgba(212, 175, 55, 0.1); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #ffd700; }
+    .stat-value { font-size: 1.8rem; font-weight: 700; color: #ffd700; }
+
+    .card { background: rgba(255,255,255,0.02); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+    .card-header h2 { color: #ffd700; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+    .table-wrapper { overflow-x: auto; max-height: 500px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 0.8rem; color: #888; font-size: 0.75rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); position: sticky; top: 0; background: #0e1628; }
+    td { padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.8rem; }
+    .empty-state { text-align: center; padding: 2rem; color: #666; }
+    .empty-state i { font-size: 2.5rem; margin-bottom: 0.5rem; display: block; }
+
+    .status { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; display: inline-block; }
+    .status.pending { background: rgba(212, 175, 55, 0.2); color: #ffd700; }
+    .status.approved { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+    .status.rejected { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+    .btn { padding: 4px 10px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.7rem; font-weight: 600; transition: all 0.2s; }
+    .btn-approve { background: rgba(0, 255, 136, 0.1); color: #00ff88; border: 1px solid #00ff88; }
+    .btn-approve:hover { background: #00ff88; color: #000; }
+    .btn-reject { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border: 1px solid #ff6b6b; }
+    .btn-reject:hover { background: #ff6b6b; color: #fff; }
+    .btn-add { background: rgba(212, 175, 55, 0.1); color: #ffd700; border: 1px solid #ffd700; }
+    .btn-add:hover { background: #ffd700; color: #000; }
+    .btn-remove { background: rgba(255, 107, 107, 0.1); color: #ff6b6b; border: 1px solid #ff6b6b; }
+    .btn-remove:hover { background: #ff6b6b; color: #fff; }
+    .btn-wager { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; }
+    .btn-wager:hover { background: #3b82f6; color: #fff; }
+    .btn-reply { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid #3b82f6; }
+    .btn-reply:hover { background: #3b82f6; color: #fff; }
+
+    .input { width: 100%; padding: 0.7rem; background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 8px; color: #fff; margin-bottom: 0.8rem; }
+    .input:focus { outline: none; border-color: #ffd700; }
+    .search-input { background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 8px; padding: 0.5rem 1rem; color: #fff; width: 250px; }
+    .search-container { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .search-btn { background: rgba(212, 175, 55, 0.2); border: 1px solid #ffd700; border-radius: 8px; padding: 0.5rem 1rem; color: #ffd700; cursor: pointer; font-size: 0.8rem; }
+    .search-btn:hover { background: #ffd700; color: #000; }
+
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.9); align-items: center; justify-content: center; z-index: 1000; }
+    .modal.active { display: flex; }
+    .modal-content { background: #0f1424; border: 2px solid #d4af37; border-radius: 12px; padding: 1.5rem; max-width: 500px; width: 90%; }
+    .modal-content h3 { color: #ffd700; margin-bottom: 1rem; }
+    .modal-buttons { display: flex; gap: 1rem; margin-top: 1rem; }
+    .modal-btn { flex: 1; padding: 0.7rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .modal-btn.confirm { background: #ffd700; color: #000; }
+    .modal-btn.cancel { background: #2a2f3e; color: #fff; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .toast { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 0.8rem 1.2rem; border-radius: 8px; z-index: 6000; display: none; animation: slideIn 0.3s ease; }
+    .toast.error { background: #ef4444; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .admin-login { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #0a0f1e; padding: 2rem; }
+    .admin-login input { width: 300px; padding: 0.8rem; background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 8px; color: #fff; margin-bottom: 1rem; }
+    .admin-login button { padding: 0.8rem 2rem; background: #ffd700; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .hidden { display: none !important; }
+
+    .commission-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem; background: rgba(0,0,0,0.3); border-radius: 8px; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem; }
+    .commission-input { width: 120px; padding: 0.3rem; background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 4px; color: #fff; text-align: center; }
+    .vip-row { display: grid; grid-template-columns: repeat(5, 1fr); padding: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); gap: 0.5rem; align-items: center; }
+    .vip-row.header { background: rgba(212,175,55,0.2); font-weight: bold; color: #ffd700; border-bottom: 1px solid #ffd700; }
+    .vip-row input { width: 100%; padding: 0.3rem; background: #1a1f2e; border: 1px solid #2a2f3e; border-radius: 4px; color: #fff; text-align: center; }
+    .refresh-btn { background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; color: #ffd700; padding: 0.3rem 0.8rem; border-radius: 6px; cursor: pointer; font-size: 0.7rem; }
+    .refresh-btn:hover { background: rgba(212, 175, 55, 0.3); }
+    .tab-badge { background: #ef4444; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; margin-left: 5px; }
+    .positive { color: #00ff88; }
+    .negative { color: #ff6b6b; }
+    .action-buttons { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .wager-slider { accent-color: #ffd700; width: 100%; }
+    .progress-bar-wager { height: 4px; background: #1a1f2e; border-radius: 2px; overflow: hidden; margin-top: 0.3rem; }
+    .progress-fill-wager { height: 100%; background: linear-gradient(90deg, #ffd700, #10b981); width: 0%; transition: width 0.3s; border-radius: 2px; }
+    .user-avatar { width: 28px; height: 28px; background: linear-gradient(145deg, #10b981, #059669); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; border: 2px solid #d4af37; }
+    .user-cell { display: flex; align-items: center; gap: 0.5rem; }
+    .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #00ff88; }
+    .offline-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #555; }
+    .wager-info { color: #ffd700; font-size: 0.7rem; }
+    .wager-met { color: #00ff88; font-size: 0.7rem; }
+    .password-cell { font-family: monospace; font-size: 0.7rem; color: #888; }
+    .deposit-request-card { border-left: 3px solid #ffd700; padding-left: 0.5rem; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div class="admin-login" id="adminLogin">
+    <div class="logo" style="margin-bottom: 2rem;">
+      <div class="logo-icon">♛</div>
+      <div><h1>ROYAL MATCH ADMIN</h1><p>Secure Admin Panel</p></div>
+    </div>
+    <input type="password" id="adminPassword" placeholder="Enter Admin Password" autocomplete="off" />
+    <button onclick="verifyAdmin()">Access Dashboard</button>
+    <p style="color: #888; font-size: 0.8rem; margin-top: 1rem;">Default: admin123</p>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboardContent" class="hidden">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">♛</div>
+        <div><h1>ROYAL MATCH ADMIN</h1><p>Management Dashboard</p></div>
+      </div>
+      <div class="live-badge">
+        <span class="live-dot"></span>
+        <span>LIVE MODE</span>
+        <button class="refresh-btn" onclick="refreshAllData()">⟳ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-section="dashboard">📊 Dashboard</button>
+      <button class="nav-tab" data-section="depositRequests">💳 Deposits <span id="depositBadge" class="tab-badge" style="display:none;">0</span></button>
+      <button class="nav-tab" data-section="players">👥 Players</button>
+      <button class="nav-tab" data-section="withdrawals">💰 Withdrawals <span id="withdrawBadge" class="tab-badge" style="display:none;">0</span></button>
+      <button class="nav-tab" data-section="vip">👑 VIP</button>
+      <button class="nav-tab" data-section="referrals">🔗 Referrals</button>
+      <button class="nav-tab" data-section="notifications">🔔 Notify</button>
+      <button class="nav-tab" data-section="support">🎧 Support <span id="supportBadge" class="tab-badge" style="display:none;">0</span></button>
+      <button class="nav-tab" data-section="settings">⚙️ Settings</button>
+    </div>
+
+    <!-- Content -->
+    <div class="main-content">
+      <!-- Dashboard -->
+      <div id="dashboardSection" class="section active">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Total Players</span><div class="stat-icon"><i class="fas fa-users"></i></div></div><div class="stat-value" id="totalPlayers">0</div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Online Now</span><div class="stat-icon"><i class="fas fa-circle"></i></div></div><div class="stat-value" id="onlinePlayers">0</div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Total Coins</span><div class="stat-icon"><i class="fas fa-coins"></i></div></div><div class="stat-value" id="totalCoins">0</div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Pending Deposits</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingDeposits">0</div></div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Total Deposits</span><div class="stat-icon"><i class="fas fa-arrow-down"></i></div></div><div class="stat-value" id="totalDeposits">0</div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Total Withdrawals</span><div class="stat-icon"><i class="fas fa-arrow-up"></i></div></div><div class="stat-value" id="totalWithdrawals">0</div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Total Wagered</span><div class="stat-icon"><i class="fas fa-dice"></i></div></div><div class="stat-value" id="totalWagered">0</div></div>
+          <div class="stat-card"><div class="stat-header"><span class="stat-title">Pending Withdrawals</span><div class="stat-icon"><i class="fas fa-clock"></i></div></div><div class="stat-value" id="pendingWithdrawals">0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-chart-line"></i> Recent Activity</h2></div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Player</th><th>Action</th><th>Amount</th><th>Time</th></tr></thead><tbody id="recentActivityBody"><tr><td colspan="4" class="empty-state"><i class="fas fa-inbox"></i> No activity yet</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Deposit Requests -->
+      <div id="depositRequestsSection" class="section">
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-credit-card"></i> Pending Deposit Requests</h2><span class="status pending" id="depositPendingCount">0</span></div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Player</th><th>Amount (PKR)</th><th>Coins</th><th>Bonus</th><th>Total Coins</th><th>Phone</th><th>Tx ID</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="depositRequestsBody"><tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No pending deposits</td></tr></tbody></table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-history"></i> Deposit History</h2></div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Player</th><th>Amount</th><th>Coins</th><th>Status</th><th>Processed By</th><th>Date</th></tr></thead><tbody id="depositHistoryBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> No history</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Players -->
+      <div id="playersSection" class="section">
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-users"></i> All Players</h2><div class="search-container"><input type="text" id="playerSearch" class="search-input" placeholder="Search..." /><button class="search-btn" onclick="searchPlayers()"><i class="fas fa-search"></i></button><button class="search-btn" onclick="resetPlayerSearch()"><i class="fas fa-sync-alt"></i></button></div></div>
+          <div class="table-wrapper">
+            <table><thead><tr><th>Status</th><th>Player</th><th>Email</th><th>Coins</th><th>Deposits</th><th>Wagered</th><th>Wager %</th><th>VIP</th><th>Games</th><th>Last Active</th><th>Actions</th></tr></thead><tbody id="playersTableBody"><tr><td colspan="11" class="empty-state"><i class="fas fa-inbox"></i> No players registered</td></tr></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Withdrawals -->
+      <div id="withdrawalsSection" class="section">
+        <div class="card"><div class="card-header"><h2><i class="fas fa-clock"></i> Pending Withdrawals</h2><span class="status pending" id="pendingCount">0</span></div><div class="table-wrapper"><table><thead><tr><th>Player</th><th>Amount</th><th>Method</th><th>Account</th><th>Wager Status</th><th>Requested</th><th>Actions</th></tr></thead><tbody id="pendingWithdrawalsTableBody"><tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> No pending withdrawals</td></tr></tbody></table></div></div>
+        <div class="card"><div class="card-header"><h2><i class="fas fa-history"></i> Withdrawal History</h2></div><div class="table-wrapper"><table><thead><tr><th>Player</th><th>Amount</th><th>Method</th><th>Status</th><th>Processed By</th><th>Date</th></tr></thead><tbody id="historyTableBody"><tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> No history</td></tr></tbody></table></div></div>
+      </div>
+
+      <!-- VIP -->
+      <div id="vipSection" class="section">
+        <div class="card"><div class="card-header"><h2><i class="fas fa-crown"></i> VIP Level Configuration</h2><button class="refresh-btn" onclick="loadVIPConfig()">Load Config</button></div><div id="vipConfigList"></div><button class="btn-add" style="width:100%; margin-top:1rem;" onclick="saveVIPConfig()">Save VIP Configuration</button></div>
+        <div class="card"><div class="card-header"><h2><i class="fas fa-chart-simple"></i> Player VIP Distribution</h2></div><div class="table-wrapper"><table><thead><tr><th>VIP Level</th><th>Count</th><th>Total Spent</th></tr></thead><tbody id="vipDistributionBody"><tr><td colspan="3" class="empty-state"><i class="fas fa-inbox"></i> No data</td></tr></tbody></table></div></div>
+      </div>
+
+      <!-- Referrals -->
+      <div id="referralsSection" class="section">
+        <div class="card"><div class="card-header"><h2><i class="fas fa-trophy"></i> Top Referrers</h2></div><div class="table-wrapper"><table><thead><tr><th>Rank</th><th>Player</th><th>Referrals</th><th>Active</th><th>Earnings</th></tr></thead><tbody id="topReferrersTableBody"><tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i> No referrals yet</td></tr></tbody></table></div></div>
+        <div class="card"><div class="card-header"><h2><i class="fas fa-list"></i> All Referrals</h2></div><div class="table-wrapper"><table><thead><tr><th>Referrer</th><th>Referred User</th><th>Commission</th><th>Date</th></tr></thead><tbody id="allReferralsTableBody"><tr><td colspan="4" class="empty-state"><i class="fas fa-inbox"></i> No referrals</td></tr></tbody></table></div></div>
+      </div>
+
+      <!-- Notifications -->
+      <div id="notificationsSection" class="section">
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-bell"></i> Send Notification</h2></div>
+          <select id="notifyTarget" class="input"><option value="all">📢 All Players</option><option value="online">🟢 Online Only</option><option value="vip">👑 VIP Only</option><option value="specific">👤 Specific Player</option></select>
+          <div id="specificPlayerSelect" style="display: none;">
+            <div class="search-container"><input type="text" id="playerSearchInput" class="search-input" placeholder="Search..." /><button class="search-btn" onclick="searchPlayersForNotification()"><i class="fas fa-search"></i></button></div>
+            <div id="playerSearchResults" style="max-height:150px;overflow-y:auto;"></div>
+            <div id="selectedPlayerDisplay" style="display:none;padding:0.5rem;margin-top:0.5rem;"></div>
+            <select id="specificPlayerId" class="input" style="display:none;"></select>
+          </div>
+          <input type="text" id="notifyTitle" class="input" placeholder="Title" />
+          <textarea id="notifyMessage" class="input" rows="3" placeholder="Message"></textarea>
+          <select id="notifyIcon" class="input"><option value="📢">📢 General</option><option value="🎉">🎉 Event</option><option value="💰">💰 Reward</option><option value="⚠️">⚠️ Warning</option><option value="✅">✅ Success</option><option value="👑">👑 VIP</option></select>
+          <button class="btn-add" style="width:100%;padding:0.8rem;" onclick="sendBroadcastNotification()">Send Notification</button>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div id="supportSection" class="section">
+        <div class="card"><div class="card-header"><h2><i class="fas fa-headset"></i> Support Tickets</h2></div><div class="table-wrapper"><table><thead><tr><th>Player</th><th>Message</th><th>Sent</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ticketsTableBody"><tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i> No tickets</td></tr></tbody></table></div></div>
+      </div>
+
+      <!-- Settings -->
+      <div id="settingsSection" class="section">
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-percent"></i> Commission Settings</h2></div>
+          <div class="commission-row"><span>Referral Commission Rate</span><div><input type="number" id="commissionRate" class="commission-input" value="10" step="0.5" /> <span>%</span></div></div>
+          <div class="commission-row"><span>Deposit Bonus Rate</span><div><input type="number" id="depositBonusRate" class="commission-input" value="2.5" step="0.5" /> <span>%</span></div></div>
+          <div class="commission-row"><span>Sign-up Bonus</span><div><input type="number" id="signupBonus" class="commission-input" value="50" /> <span>Coins</span></div></div>
+          <div class="commission-row"><span>Wager Requirement Rate</span><div><input type="number" id="wagerRate" class="commission-input" value="70" step="5" /> <span>% of deposit</span></div></div>
+          <button class="btn-add" style="width:100%;margin-top:1rem;" onclick="saveGeneralSettings()">Save Settings</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2><i class="fas fa-sliders-h"></i> Player Wager Control</h2></div>
+          <div class="commission-row"><span>Select Player</span><select id="wagerPlayerSelect" class="commission-input" style="width:250px;" onchange="loadPlayerWagerData()"><option value="">Select Player</option></select></div>
+          <div id="playerWagerPanel" style="display:none;">
+            <div style="padding:1rem;background:rgba(0,0,0,0.3);border-radius:8px;">
+              <h4 id="wagerPlayerName">Player Name</h4>
+              <div class="commission-row"><span>Current Coins:</span><span id="playerCoins" class="positive">0</span></div>
+              <div class="commission-row"><span>Total Deposits:</span><span id="playerDeposits">0</span></div>
+              <div class="commission-row"><span>Total Wagered:</span><span id="playerWagered">0</span></div>
+              <div class="commission-row"><span>Required to Withdraw:</span><span id="playerRequiredWagered">0</span></div>
+              <div class="commission-row"><span>Wager Progress:</span><span id="playerWagerProgress">0%</span></div>
+              <div class="progress-bar-wager"><div class="progress-fill-wager" id="wagerProgressFill" style="width:0%;"></div></div>
+              <input type="range" id="wagerAdjustSlider" class="wager-slider" min="0" max="100000" step="1000" value="0" onchange="updateWagerPreview()" />
+              <div class="commission-row"><span>Adjust Wagered Amount:</span><div><input type="number" id="wagerAdjustAmount" class="commission-input" style="width:120px;" value="0" step="1000" onchange="updateWagerSlider()" /><span> Coins</span></div></div>
+              <div class="action-buttons" style="margin-top:1rem;"><button class="btn-add" onclick="adjustPlayerWager('add')">+ Add</button><button class="btn-remove" onclick="adjustPlayerWager('remove')">- Remove</button><button class="btn-wager" onclick="resetPlayerWagered()">Reset to 0</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Modals -->
+  <div id="coinModal" class="modal"><div class="modal-content"><h3 id="coinModalTitle">Add Coins</h3><input type="number" id="coinAmount" class="input" placeholder="Enter amount" /><div class="modal-buttons"><button class="modal-btn confirm" onclick="processCoinAction()">Confirm</button><button class="modal-btn cancel" onclick="closeCoinModal()">Cancel</button></div></div></div>
+  <div id="rejectModal" class="modal"><div class="modal-content"><h3>Reject Withdrawal</h3><textarea id="rejectReasonText" class="input" rows="3" placeholder="Reason..."></textarea><div class="modal-buttons"><button class="modal-btn confirm" onclick="confirmRejectWithdrawal()">Reject</button><button class="modal-btn cancel" onclick="closeRejectModal()">Cancel</button></div></div></div>
+  <div id="replyModal" class="modal"><div class="modal-content"><h3>Reply to Ticket</h3><textarea id="replyMessageText" class="input" rows="3" placeholder="Your reply..."></textarea><div class="modal-buttons"><button class="modal-btn confirm" onclick="sendTicketReply()">Send</button><button class="modal-btn cancel" onclick="closeReplyModal()">Cancel</button></div></div></div>
+  <div id="wagerModal" class="modal"><div class="modal-content"><h3 id="wagerModalTitle">Adjust Wager</h3><div id="wagerModalMessage"></div><div class="modal-buttons"><button class="modal-btn confirm" onclick="confirmWagerAdjustment()">Confirm</button><button class="modal-btn cancel" onclick="closeWagerModal()">Cancel</button></div></div></div>
+
+  <script>
+    // ============================================================
+    //  FIREBASE CONFIG
+    // ============================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyDUSi0mM3bYMEozFD3Ahh0vUZ5gBG1dNTU",
+      authDomain: "flappy77777.firebaseapp.com",
+      databaseURL: "https://flappy77777-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "flappy77777",
+      storageBucket: "flappy77777.firebasestorage.app",
+      messagingSenderId: "393994889085",
+      appId: "1:393994889085:web:61132fe75fe3df840e4e14",
+      measurementId: "G-R7GQHB4L3F"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const analytics = typeof firebase.analytics === 'function' ? firebase.analytics(app) : null;
+
+    // ============================================================
+    //  GLOBAL STATE
+    // ============================================================
+    let allUsers = {};
+    let allWithdrawals = {};
+    let allTickets = {};
+    let allReferrals = {};
+    let allDeposits = {};
+    let allGameHistory = {};
+    let settings = {
+      vip: [
+        { level: 0, requiredSpend: 0, dailyReward: 5, weeklyReward: 35, monthlyReward: 60 },
+        { level: 1, requiredSpend: 40000, dailyReward: 10, weeklyReward: 70, monthlyReward: 120 },
+        { level: 2, requiredSpend: 80000, dailyReward: 20, weeklyReward: 140, monthlyReward: 240 },
+        { level: 3, requiredSpend: 160000, dailyReward: 40, weeklyReward: 280, monthlyReward: 480 },
+        { level: 4, requiredSpend: 320000, dailyReward: 80, weeklyReward: 560, monthlyReward: 960 },
+        { level: 5, requiredSpend: 640000, dailyReward: 160, weeklyReward: 1120, monthlyReward: 1920 }
+      ],
+      wager: { rate: 0.70 },
+      general: { commissionRate: 10, depositBonusRate: 2.5, signupBonus: 50 }
+    };
+
+    // ============================================================
+    //  HELPERS
+    // ============================================================
+    function showToast(msg, err = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast' + (err ? ' error' : '');
+      t.style.display = 'block';
+      setTimeout(() => t.style.display = 'none', 3000);
+    }
+    
+    function formatNumber(n) {
+      if (n == null) return '0';
+      if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+      if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+      return n.toLocaleString();
+    }
+    
+    function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    
+    function isUserOnline(u) { if (!u || !u.lastActive) return false; return (Date.now() - new Date(u.lastActive).getTime()) < 300000; }
+    
+    function getRequiredWager(u) {
+      const dep = u.totalDeposits || 0;
+      return Math.max(0, dep * (settings.wager.rate || 0.70) - (u.totalWagered || 0));
+    }
+    
+    function getWagerProgress(u) {
+      const req = (u.totalDeposits || 0) * (settings.wager.rate || 0.70);
+      if (req <= 0) return 100;
+      return Math.min(100, ((u.totalWagered || 0) / req) * 100);
+    }
+    
+    function getVIPLevel(totalSpent) {
+      let lvl = 0;
+      const cfg = settings.vip;
+      for (let i = cfg.length - 1; i >= 0; i--) {
+        if (totalSpent >= cfg[i].requiredSpend) { lvl = cfg[i].level; break; }
+      }
+      return lvl;
+    }
+
+    // ============================================================
+    //  AUTH
+    // ============================================================
+    function verifyAdmin() {
+      const pwd = document.getElementById('adminPassword').value;
+      if (pwd === 'admin123') {
+        document.getElementById('adminLogin').classList.add('hidden');
+        document.getElementById('dashboardContent').classList.remove('hidden');
+        loadAllData();
+        loadVIPConfig();
+        showToast('Access granted');
+        // Start real-time listeners
+        setupRealtimeListeners();
+      } else {
+        showToast('Invalid password', true);
+      }
+    }
+
+    // ============================================================
+    //  REAL-TIME LISTENERS
+    // ============================================================
+    function setupRealtimeListeners() {
+      // Users
+      db.ref('users').on('value', snap => {
+        allUsers = snap.val() || {};
+        updateStats();
+        updatePlayersTable();
+        updateTopReferrers();
+        updateVIPDistribution();
+        populateWagerPlayerSelect();
+        updateRecentActivity();
+        updateAllReferralsTable();
+        updateDepositRequests();
+        updateWithdrawalsTables();
+        updateTicketsTable();
+        updateBadges();
+      });
+
+      // Deposits
+      db.ref('depositRequests').on('value', snap => {
+        allDeposits = snap.val() || {};
+        updateDepositRequests();
+        updateStats();
+        updateBadges();
+      });
+
+      // Withdrawals
+      db.ref('withdrawals').on('value', snap => {
+        allWithdrawals = snap.val() || {};
+        updateWithdrawalsTables();
+        updateStats();
+        updateBadges();
+      });
+
+      // Tickets
+      db.ref('tickets').on('value', snap => {
+        allTickets = snap.val() || {};
+        updateTicketsTable();
+        updateBadges();
+      });
+
+      // Referrals
+      db.ref('referrals').on('value', snap => {
+        allReferrals = snap.val() || {};
+        updateAllReferralsTable();
+        updateTopReferrers();
+      });
+
+      // Game History
+      db.ref('gameHistory').on('value', snap => {
+        allGameHistory = snap.val() || {};
+        updateRecentActivity();
+      });
+
+      // Settings
+      db.ref('settings').on('value', snap => {
+        const data = snap.val();
+        if (data) {
+          if (data.vip) settings.vip = data.vip;
+          if (data.wager) settings.wager = data.wager;
+          if (data.general) settings.general = data.general;
+        }
+        loadVIPConfig();
+        updateStats();
+      });
+    }
+
+    // ============================================================
+    //  BADGES
+    // ============================================================
+    function updateBadges() {
+      const pendingD = Object.values(allDeposits).filter(d => d.status === 'pending').length;
+      const pendingW = Object.values(allWithdrawals).filter(w => w.status === 'pending').length;
+      const pendingT = Object.values(allTickets).filter(t => t.status === 'pending').length;
+      
+      const depositBadge = document.getElementById('depositBadge');
+      const withdrawBadge = document.getElementById('withdrawBadge');
+      const supportBadge = document.getElementById('supportBadge');
+      
+      if (pendingD > 0) { depositBadge.style.display = 'inline'; depositBadge.textContent = pendingD; } else { depositBadge.style.display = 'none'; }
+      if (pendingW > 0) { withdrawBadge.style.display = 'inline'; withdrawBadge.textContent = pendingW; } else { withdrawBadge.style.display = 'none'; }
+      if (pendingT > 0) { supportBadge.style.display = 'inline'; supportBadge.textContent = pendingT; } else { supportBadge.style.display = 'none'; }
+    }
+
+    // ============================================================
+    //  STATS
+    // ============================================================
+    function updateStats() {
+      let online = 0, totalCoins = 0, totalDeposits = 0, totalWagered = 0, pendingW = 0, pendingD = 0, totalWithd = 0;
+      
+      Object.values(allUsers).forEach(u => {
+        totalCoins += u.coins || 0;
+        totalDeposits += u.totalDeposits || 0;
+        totalWagered += u.totalWagered || 0;
+        if (isUserOnline(u)) online++;
+      });
+      
+      Object.values(allWithdrawals).forEach(w => {
+        if (w.status === 'pending') pendingW++;
+        if (w.status === 'approved') totalWithd += w.amount;
+      });
+      
+      Object.values(allDeposits).forEach(d => {
+        if (d.status === 'pending') pendingD++;
+      });
+      
+      document.getElementById('totalPlayers').textContent = Object.keys(allUsers).length;
+      document.getElementById('onlinePlayers').textContent = online;
+      document.getElementById('totalCoins').textContent = formatNumber(totalCoins);
+      document.getElementById('totalDeposits').textContent = formatNumber(totalDeposits);
+      document.getElementById('totalWagered').textContent = formatNumber(totalWagered);
+      document.getElementById('pendingWithdrawals').textContent = pendingW;
+      document.getElementById('pendingDeposits').textContent = pendingD;
+      document.getElementById('totalWithdrawals').textContent = formatNumber(totalWithd);
+    }
+
+    // ============================================================
+    //  RECENT ACTIVITY
+    // ============================================================
+    function updateRecentActivity() {
+      const tbody = document.getElementById('recentActivityBody');
+      let acts = [];
+      
+      Object.values(allGameHistory).forEach(g => {
+        if (g.username) acts.push({
+          player: g.username,
+          action: g.result === 'win' ? '🎮 Won Game' : (g.result === 'maxwin' ? '🏆 Max Win!' : '💣 Lost'),
+          amount: g.winAmount || g.bet || 0,
+          time: g.timestamp
+        });
+      });
+      
+      Object.values(allDeposits).forEach(d => {
+        if (d.status === 'approved') acts.push({
+          player: d.username,
+          action: '💰 Deposit Approved',
+          amount: d.totalCoins,
+          time: d.processedAt || d.timestamp
+        });
+      });
+      
+      Object.values(allWithdrawals).forEach(w => {
+        if (w.status === 'approved') acts.push({
+          player: w.username,
+          action: '💸 Withdrawal Approved',
+          amount: w.amount,
+          time: w.processedAt || w.timestamp
+        });
+      });
+      
+      acts.sort((a,b) => new Date(b.time) - new Date(a.time));
+      acts = acts.slice(0, 15);
+      
+      if (acts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state"><i class="fas fa-inbox"></i> No activity yet</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = acts.map(a => `<tr>
+        <td><div class="user-cell"><div class="user-avatar">👤</div> ${escapeHtml(a.player)}</div></td>
+        <td>${a.action}</td>
+        <td class="positive">${formatNumber(a.amount)}</td>
+        <td>${a.time ? new Date(a.time).toLocaleString() : 'Just now'}</td>
+      </tr>`).join('');
+    }
+
+    // ============================================================
+    //  DEPOSIT REQUESTS
+    // ============================================================
+    function updateDepositRequests() {
+      const pendingBody = document.getElementById('depositRequestsBody');
+      const historyBody = document.getElementById('depositHistoryBody');
+      let pHtml = '', hHtml = '', pCount = 0;
+      
+      Object.entries(allDeposits).forEach(([id, req]) => {
+        const user = allUsers[req.userId] || { username: req.username || 'Unknown' };
+        let userNumber = req.phoneNumber || req.userPhone || req.userNumber || req.mobileNum || user.phone || '';
+        if (!userNumber || userNumber === '-' || userNumber.startsWith('PK65FNJA') || userNumber === '982965217' || userNumber === user.username) {
+          userNumber = (user.phone && user.phone !== user.username && user.phone !== '982965217') ? user.phone : ((req.transactionId && !req.transactionId.startsWith('PK65') && req.transactionId !== '982965217' && req.transactionId !== user.username) ? req.transactionId : '-');
+        }
+        let txId = req.transactionId || '-';
+        if (txId.startsWith('PK65FNJA') || txId === '982965217' || txId === user.username || txId === '-') {
+          txId = userNumber;
+        }
+
+        if (req.status === 'pending') {
+          pCount++;
+          pHtml += `<tr class="deposit-request-card">
+            <td><div class="user-cell"><div class="user-avatar">👤</div> ${escapeHtml(user.username)}</div></td>
+            <td class="positive">₨${formatNumber(req.amount)}</td>
+            <td class="positive">${formatNumber(req.coins)}</td>
+            <td class="positive">+${formatNumber(req.bonusCoins)}</td>
+            <td class="positive">${formatNumber(req.totalCoins)}</td>
+            <td>${escapeHtml(userNumber || '-')}</td>
+            <td><small>${escapeHtml(userNumber || txId || '-')}</small></td>
+            <td>${new Date(req.timestamp).toLocaleString()}</td>
+            <td><div class="action-buttons"><button class="btn-approve" onclick="approveDeposit('${id}')">Approve</button><button class="btn-reject" onclick="rejectDeposit('${id}')">Reject</button></div></td>
+          </tr>`;
+        } else {
+          hHtml += `<tr>
+            <td>${escapeHtml(user.username)}</td>
+            <td class="positive">₨${formatNumber(req.amount)}</td>
+            <td class="positive">${formatNumber(req.totalCoins)}</td>
+            <td><span class="status ${req.status}">${req.status}</span></td>
+            <td>${req.processedBy || 'System'}</td>
+            <td>${new Date(req.processedAt || req.timestamp).toLocaleString()}</td>
+          </tr>`;
+        }
+      });
+      
+      document.getElementById('depositPendingCount').textContent = pCount;
+      pendingBody.innerHTML = pHtml || '<tr><td colspan="9" class="empty-state"><i class="fas fa-inbox"></i> No pending deposits</td></tr>';
+      historyBody.innerHTML = hHtml || '<tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> No history</td></tr>';
+    }
+
+    async function approveDeposit(reqId) {
+      const req = allDeposits[reqId];
+      if (!req || req.status !== 'pending') return showToast('Already processed', true);
+      
+      req.status = 'approved';
+      req.processedBy = 'Admin';
+      req.processedAt = new Date().toISOString();
+      
+      const user = allUsers[req.userId];
+      if (user) {
+        user.coins = (user.coins || 0) + req.totalCoins;
+        user.totalDeposits = (user.totalDeposits || 0) + req.amount;
+        user.totalSpent = (user.totalSpent || 0) + req.amount;
+        const newVIP = getVIPLevel(user.totalSpent);
+        if (newVIP > (user.vipLevel || 0)) user.vipLevel = newVIP;
+      }
+      
+      try {
+        await db.ref('depositRequests/' + reqId).update(req);
+        if (user) await db.ref('users/' + req.userId).update(user);
+        sendNotificationToPlayer(req.userId, '✅ Deposit Approved', `${formatNumber(req.totalCoins)} coins added to your account!`, '✅');
+        showToast('Deposit approved');
+      } catch (e) {
+        showToast('Error approving deposit', true);
+        console.error(e);
+      }
+    }
+
+    async function rejectDeposit(reqId) {
+      const req = allDeposits[reqId];
+      if (!req || req.status !== 'pending') return showToast('Already processed', true);
+      
+      req.status = 'rejected';
+      req.processedBy = 'Admin';
+      req.processedAt = new Date().toISOString();
+      
+      try {
+        await db.ref('depositRequests/' + reqId).update(req);
+        sendNotificationToPlayer(req.userId, '❌ Deposit Rejected', 'Your deposit was rejected. Please contact support.', '❌');
+        showToast('Deposit rejected');
+      } catch (e) {
+        showToast('Error rejecting deposit', true);
+        console.error(e);
+      }
+    }
+
+    // ============================================================
+    //  PLAYERS
+    // ============================================================
+    function updatePlayersTable() {
+      const tbody = document.getElementById('playersTableBody');
+      const users = Object.values(allUsers);
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="empty-state"><i class="fas fa-inbox"></i> No players registered</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      users.forEach(user => {
+        const online = isUserOnline(user);
+        const prog = getWagerProgress(user);
+        html += `<tr>
+          <td><span class="${online ? 'online-dot' : 'offline-dot'}"></span></td>
+          <td><div class="user-cell"><div class="user-avatar">${user.avatar || '👤'}</div> ${escapeHtml(user.username)}</div></td>
+          <td><small>${escapeHtml(user.email || 'N/A')}</small></td>
+          <td class="positive">${formatNumber(user.coins || 0)}</td>
+          <td class="positive">${formatNumber(user.totalDeposits || 0)}</td>
+          <td>${formatNumber(user.totalWagered || 0)}</td>
+          <td><div class="progress-bar-wager" style="width:80px;"><div class="progress-fill-wager" style="width:${Math.min(100, prog)}%;"></div></div><span style="font-size:0.7rem;">${Math.floor(prog)}%</span></td>
+          <td><span class="status approved">VIP ${user.vipLevel || 0}</span></td>
+          <td>${user.totalBets || 0}</td>
+          <td>${user.lastActive ? new Date(user.lastActive).toLocaleString() : 'Never'}</td>
+          <td><div class="action-buttons">
+            <button class="btn-add" onclick="openCoinModal('add', '${user.uid || ''}')">+ Coins</button>
+            <button class="btn-remove" onclick="openCoinModal('remove', '${user.uid || ''}')">- Coins</button>
+            <button class="btn-wager" onclick="openPlayerWagerModal('${user.uid || ''}', '${escapeHtml(user.username)}', ${user.totalWagered || 0})">Wager</button>
+            <button class="btn-reply" onclick="sendIndividualNotification('${user.uid || ''}', '${escapeHtml(user.username)}')">Notify</button>
+          </div></td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function searchPlayers() {
+      const term = document.getElementById('playerSearch').value.toLowerCase();
+      const tbody = document.getElementById('playersTableBody');
+      const users = Object.values(allUsers).filter(u => 
+        (u.username && u.username.toLowerCase().includes(term)) || 
+        (u.email && u.email.toLowerCase().includes(term))
+      );
+      
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="empty-state"><i class="fas fa-inbox"></i> No matches</td></tr>';
+        return;
+      }
+      
+      let html = '';
+      users.forEach(user => {
+        const online = isUserOnline(user);
+        const prog = getWagerProgress(user);
+        html += `<tr>
+          <td><span class="${online ? 'online-dot' : 'offline-dot'}"></span></td>
+          <td><div class="user-cell"><div class="user-avatar">${user.avatar || '👤'}</div> ${escapeHtml(user.username)}</div></td>
+          <td><small>${escapeHtml(user.email || 'N/A')}</small></td>
+          <td class="positive">${formatNumber(user.coins || 0)}</td>
+          <td class="positive">${formatNumber(user.totalDeposits || 0)}</td>
+          <td>${formatNumber(user.totalWagered || 0)}</td>
+          <td><div class="progress-bar-wager" style="width:80px;"><div class="progress-fill-wager" style="width:${Math.min(100, prog)}%;"></div></div><span style="font-size:0.7rem;">${Math.floor(prog)}%</span></td>
+          <td><span class="status approved">VIP ${user.vipLevel || 0}</span></td>
+          <td>${user.totalBets || 0}</td>
+          <td>${user.lastActive ? new Date(user.lastActive).toLocaleString() : 'Never'}</td>
+          <td><div class="action-buttons">
+            <button class="btn-add" onclick="openCoinModal('add', '${user.uid || ''}')">+ Coins</button>
+            <button class="btn-remove" onclick="openCoinModal('remove', '${user.uid || ''}')">- Coins</button>
+            <button class="btn-wager" onclick="openPlayerWagerModal('${user.uid || ''}', '${escapeHtml(user.username)}', ${user.totalWagered || 0})">Wager</button>
+            <button class="btn-reply" onclick="sendIndividualNotification('${user.uid || ''}', '${escapeHtml(user.username)}')">Notify</button>
+          </div></td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
+    }
+    
+    function resetPlayerSearch() { document.getElementById('playerSearch').value = ''; updatePlayersTable(); }
+
+    // ============================================================
+    //  WITHDRAWALS
+    // ============================================================
+    function updateWithdrawalsTables() {
+      const pendingBody = document.getElementById('pendingWithdrawalsTableBody');
+      const historyBody = document.getElementById('historyTableBody');
+      let pHtml = '', hHtml = '', pCount = 0;
+      
+      Object.entries(allWithdrawals).forEach(([id, w]) => {
+        const user = allUsers[w.userId] || { username: 'Unknown', totalWagered: 0, totalDeposits: 0 };
+        let userNumber = w.phoneNumber || w.userPhone || w.userNumber || w.accountNumber || user.phone || '-';
+        if (userNumber.startsWith('PK65FNJA') || userNumber === '982965217' || userNumber === user.username) {
+          userNumber = (user.phone && user.phone !== user.username && user.phone !== '982965217') ? user.phone : '-';
+        }
+
+        if (w.status === 'pending') {
+          pCount++;
+          const reqW = getRequiredWager(user);
+          const statusHtml = reqW > 0 ? `<div class="wager-info">⚠️ Needs ${formatNumber(reqW)} more</div>` : `<div class="wager-met">✅ Wager met</div>`;
+          pHtml += `<tr>
+            <td><div class="user-cell"><div class="user-avatar">👤</div> ${escapeHtml(user.username)}</div></td>
+            <td class="positive">${formatNumber(w.amount)}</td>
+            <td>${w.method === 'jazzcash' ? 'JazzCash' : 'Easypaisa'}</td>
+            <td><small>${escapeHtml(userNumber)}</small></td>
+            <td>${statusHtml}</td>
+            <td>${new Date(w.timestamp).toLocaleString()}</td>
+            <td><div class="action-buttons"><button class="btn-approve" onclick="approveWithdrawal('${id}')">Approve</button><button class="btn-reject" onclick="openRejectModal('${id}')">Reject</button></div></td>
+          </tr>`;
+        } else {
+          hHtml += `<tr>
+            <td>${escapeHtml(user.username)}</td>
+            <td class="${w.status === 'approved' ? 'positive' : 'negative'}">${formatNumber(w.amount)}</td>
+            <td>${w.method === 'jazzcash' ? 'JazzCash' : 'Easypaisa'}</td>
+            <td><span class="status ${w.status}">${w.status}</span></td>
+            <td>${w.processedBy || 'System'}</td>
+            <td>${new Date(w.timestamp).toLocaleString()}</td>
+          </tr>`;
+        }
+      });
+      
+      document.getElementById('pendingCount').textContent = pCount;
+      pendingBody.innerHTML = pHtml || '<tr><td colspan="7" class="empty-state"><i class="fas fa-inbox"></i> No pending withdrawals</td></tr>';
+      historyBody.innerHTML = hHtml || '<tr><td colspan="6" class="empty-state"><i class="fas fa-inbox"></i> No history</td></tr>';
+    }
+
+    async function approveWithdrawal(wdId) {
+      const w = allWithdrawals[wdId];
+      if (!w || w.status !== 'pending') return showToast('Already processed', true);
+      
+      const user = allUsers[w.userId];
+      if (user && getRequiredWager(user) > 0) {
+        if (!confirm(`Player has not met 70% wager requirement (needs ${formatNumber(getRequiredWager(user))} more). Approve withdrawal anyway?`)) {
+          return showToast('Withdrawal held (wager not met)', true);
+        }
+      }
+      
+      w.status = 'approved';
+      w.processedBy = 'Admin';
+      w.processedAt = new Date().toISOString();
+      
+      try {
+        await db.ref('withdrawals/' + wdId).update(w);
+        sendNotificationToPlayer(w.userId, '✅ Withdrawal Approved', `Withdrawal of ${formatNumber(w.amount)} coins to ${w.accountNumber || ''} approved.`, '✅');
+        showToast('Withdrawal approved');
+      } catch (e) {
+        showToast('Error approving withdrawal', true);
+        console.error(e);
+      }
+    }
+
+    function openRejectModal(wdId) { window._rejectId = wdId; document.getElementById('rejectModal').classList.add('active'); }
+    function closeRejectModal() { document.getElementById('rejectModal').classList.remove('active'); document.getElementById('rejectReasonText').value = ''; }
+    
+    async function confirmRejectWithdrawal() {
+      const reason = document.getElementById('rejectReasonText').value.trim();
+      if (!reason) return showToast('Enter reason', true);
+      
+      const w = allWithdrawals[window._rejectId];
+      if (w && w.status === 'pending') {
+        w.status = 'rejected';
+        w.reason = reason;
+        w.processedBy = 'Admin';
+        w.processedAt = new Date().toISOString();
+        
+        // Refund coins to user
+        const user = allUsers[w.userId];
+        if (user) {
+          user.coins = (user.coins || 0) + (w.amount || 0);
+          try {
+            await db.ref('users/' + w.userId + '/coins').set(user.coins);
+          } catch(e) {}
+        }
+
+        try {
+          await db.ref('withdrawals/' + window._rejectId).update(w);
+          sendNotificationToPlayer(w.userId, '❌ Withdrawal Rejected', `Reason: ${reason}. Coins refunded.`, '❌');
+          showToast('Rejected & refunded');
+        } catch (e) {
+          showToast('Error rejecting withdrawal', true);
+          console.error(e);
+        }
+      }
+      closeRejectModal();
+    }
+
+    // ============================================================
+    //  VIP
+    // ============================================================
+    function loadVIPConfig() { renderVIPConfig(); }
+    
+    function renderVIPConfig() {
+      const container = document.getElementById('vipConfigList');
+      let html = '<div class="vip-row header"><span>VIP Level</span><span>Required Spend</span><span>Daily</span><span>Weekly</span><span>Monthly</span></div>';
+      settings.vip.forEach((vip, i) => {
+        html += `<div class="vip-row">
+          <span>VIP ${vip.level}</span>
+          <div><input type="number" id="req_${i}" class="commission-input" value="${vip.requiredSpend}"></div>
+          <div><input type="number" id="daily_${i}" class="commission-input" value="${vip.dailyReward}"></div>
+          <div><input type="number" id="weekly_${i}" class="commission-input" value="${vip.weeklyReward}"></div>
+          <div><input type="number" id="monthly_${i}" class="commission-input" value="${vip.monthlyReward}"></div>
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+    
+    async function saveVIPConfig() {
+      const newCfg = [];
+      for (let i = 0; i < settings.vip.length; i++) {
+        newCfg.push({
+          level: settings.vip[i].level,
+          requiredSpend: parseInt(document.getElementById(`req_${i}`).value) || 0,
+          dailyReward: parseInt(document.getElementById(`daily_${i}`).value) || 0,
+          weeklyReward: parseInt(document.getElementById(`weekly_${i}`).value) || 0,
+          monthlyReward: parseInt(document.getElementById(`monthly_${i}`).value) || 0
+        });
+      }
+      settings.vip = newCfg;
+      try {
+        await db.ref('settings/vip').set(newCfg);
+        showToast('VIP config saved');
+        updateVIPDistribution();
+      } catch (e) {
+        showToast('Error saving VIP config', true);
+        console.error(e);
+      }
+    }
+    
+    function updateVIPDistribution() {
+      const tbody = document.getElementById('vipDistributionBody');
+      const dist = {};
+      Object.values(allUsers).forEach(u => {
+        const v = u.vipLevel || 0;
+        dist[v] = (dist[v] || 0) + 1;
+      });
+      
+      let html = '';
+      for (let i = 0; i <= 10; i++) {
+        const count = dist[i] || 0;
+        const spent = Object.values(allUsers).filter(u => (u.vipLevel || 0) === i).reduce((s,u) => s + (u.totalSpent || 0), 0);
+        html += `<tr><td>VIP ${i}</td><td>${count}</td><td>${formatNumber(spent)}</td></tr>`;
+      }
+      tbody.innerHTML = html || '<tr><td colspan="3" class="empty-state"><i class="fas fa-inbox"></i> No data</td></tr>';
+    }
+
+    // ============================================================
+    //  REFERRALS
+    // ============================================================
+    function updateTopReferrers() {
+      const tbody = document.getElementById('topReferrersTableBody');
+      const refs = Object.values(allUsers).filter(u => (u.referralCount || 0) > 0)
+        .sort((a,b) => (b.referralCount||0) - (a.referralCount||0)).slice(0,10);
+      
+      if (refs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i> No referrals yet</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = refs.map((r,i) => `<tr>
+        <td>${i+1}</td>
+        <td><div class="user-cell"><div class="user-avatar">👤</div> ${escapeHtml(r.username)}</div></td>
+        <td>${r.referralCount}</td>
+        <td>${r.activeReferrals||0}</td>
+        <td class="positive">${formatNumber(r.referralEarnings||0)}</td>
+      </tr>`).join('');
+    }
+    
+    function updateAllReferralsTable() {
+      const tbody = document.getElementById('allReferralsTableBody');
+      let html = '';
+      Object.entries(allReferrals).forEach(([id, ref]) => {
+        const referrer = allUsers[ref.referrerId] || { username: 'Unknown' };
+        const referred = allUsers[ref.referredUserId] || { username: 'Unknown' };
+        html += `<tr>
+          <td>${escapeHtml(referrer.username)}</td>
+          <td>${escapeHtml(referred.username)}</td>
+          <td class="positive">${formatNumber(ref.commissionEarned||0)}</td>
+          <td>${ref.timestamp ? new Date(ref.timestamp).toLocaleDateString() : '-'}</td>
+        </tr>`;
+      });
+      tbody.innerHTML = html || '<tr><td colspan="4" class="empty-state"><i class="fas fa-inbox"></i> No referrals</td></tr>';
+    }
+
+    // ============================================================
+    //  SUPPORT TICKETS
+    // ============================================================
+    function updateTicketsTable() {
+      const tbody = document.getElementById('ticketsTableBody');
+      let html = '';
+      Object.entries(allTickets).reverse().forEach(([id, ticket]) => {
+        const user = allUsers[ticket.userId] || { username: 'Unknown' };
+        html += `<tr>
+          <td><div class="user-cell"><div class="user-avatar">👤</div> ${escapeHtml(user.username)}</div></td>
+          <td style="max-width:300px;">${escapeHtml(ticket.message.substring(0, 100))}${ticket.message.length > 100 ? '...' : ''}</td>
+          <td>${new Date(ticket.timestamp).toLocaleString()}</td>
+          <td><span class="status ${ticket.status === 'pending' ? 'pending' : 'approved'}">${ticket.status}</span></td>
+          <td><button class="btn-reply" onclick="openReplyModal('${id}')">Reply</button></td>
+        </tr>`;
+      });
+      tbody.innerHTML = html || '<tr><td colspan="5" class="empty-state"><i class="fas fa-inbox"></i> No tickets</td></tr>';
+    }
+    
+    function openReplyModal(ticketId) { window._replyTicketId = ticketId; document.getElementById('replyModal').classList.add('active'); }
+    function closeReplyModal() { document.getElementById('replyModal').classList.remove('active'); document.getElementById('replyMessageText').value = ''; }
+    
+    async function sendTicketReply() {
+      const reply = document.getElementById('replyMessageText').value.trim();
+      if (!reply) return showToast('Enter reply', true);
+      
+      const ticket = allTickets[window._replyTicketId];
+      if (ticket) {
+        ticket.replies = ticket.replies || [];
+        ticket.replies.push({ message: reply, timestamp: new Date().toISOString(), from: 'admin' });
+        ticket.status = 'answered';
+        try {
+          await db.ref('tickets/' + window._replyTicketId).update(ticket);
+          sendNotificationToPlayer(ticket.userId, 'Support Reply', `Admin replied: "${reply.substring(0,50)}..."`, '💬');
+          showToast('Reply sent');
+        } catch (e) {
+          showToast('Error sending reply', true);
+          console.error(e);
+        }
+      }
+      closeReplyModal();
+    }
+
+    // ============================================================
+    //  NOTIFICATIONS
+    // ============================================================
+    function searchPlayersForNotification() {
+      const term = document.getElementById('playerSearchInput').value.toLowerCase();
+      const resultsDiv = document.getElementById('playerSearchResults');
+      if (!term) { resultsDiv.innerHTML = ''; return; }
+      
+      let html = '';
+      Object.entries(allUsers).forEach(([id, user]) => {
+        if (user.username && user.username.toLowerCase().includes(term)) {
+          html += `<div style="padding:0.5rem;margin-bottom:0.3rem;cursor:pointer;background:rgba(255,255,255,0.02);border-radius:4px;" onclick="selectPlayerForNotification('${id}', '${escapeHtml(user.username)}')">
+            <strong>${escapeHtml(user.username)}</strong><br><small>${escapeHtml(user.email||'')}</small>
+          </div>`;
+        }
+      });
+      resultsDiv.innerHTML = html || '<div style="padding:0.5rem;">No players found</div>';
+    }
+    
+    function selectPlayerForNotification(id, name) {
+      window._selectedPlayer = { id, name };
+      document.getElementById('selectedPlayerDisplay').innerHTML = `<strong>Selected:</strong> ${name} <button class="btn-remove" style="margin-left:0.5rem;padding:0.2rem 0.5rem;" onclick="clearSelectedPlayer()">Clear</button>`;
+      document.getElementById('selectedPlayerDisplay').style.display = 'block';
+      document.getElementById('playerSearchResults').innerHTML = '';
+      document.getElementById('playerSearchInput').value = '';
+      document.getElementById('specificPlayerId').innerHTML = `<option value="${id}">${name}</option>`;
+      document.getElementById('specificPlayerId').style.display = 'block';
+    }
+    
+    function clearSelectedPlayer() {
+      window._selectedPlayer = null;
+      document.getElementById('selectedPlayerDisplay').style.display = 'none';
+      document.getElementById('specificPlayerId').style.display = 'none';
+    }
+    
+    function sendIndividualNotification(userId, username) {
+      document.getElementById('notifyTarget').value = 'specific';
+      document.getElementById('specificPlayerSelect').style.display = 'block';
+      selectPlayerForNotification(userId, username);
+      document.getElementById('notifyTitle').focus();
+      showToast(`Selected: ${username}`);
+      document.querySelector('.nav-tab[data-section="notifications"]').click();
+    }
+    
+    function sendBroadcastNotification() {
+      const target = document.getElementById('notifyTarget').value;
+      const title = document.getElementById('notifyTitle').value.trim();
+      const message = document.getElementById('notifyMessage').value.trim();
+      const icon = document.getElementById('notifyIcon').value;
+      let specificId = document.getElementById('specificPlayerId').value;
+      
+      if (!title || !message) return showToast('Enter title & message', true);
+      
+      let count = 0;
+      if (target === 'specific' && specificId) {
+        sendNotificationToPlayer(specificId, title, message, icon);
+        count = 1;
+      } else {
+        Object.entries(allUsers).forEach(([id, user]) => {
+          let send = false;
+          if (target === 'online') send = isUserOnline(user);
+          else if (target === 'vip') send = (user.vipLevel || 0) >= 1;
+          else send = true;
+          if (send) { sendNotificationToPlayer(id, title, message, icon); count++; }
+        });
+      }
+      showToast(`Sent to ${count} players`);
+      document.getElementById('notifyTitle').value = '';
+      document.getElementById('notifyMessage').value = '';
+    }
+    
+    async function sendNotificationToPlayer(userId, title, message, icon) {
+      const notification = {
+        userId: userId,
+        title: title,
+        message: message,
+        icon: icon,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      try {
+        await db.ref('notifications').push().set(notification);
+        console.log(`📨 [${userId}] ${icon} ${title} : ${message}`);
+      } catch (e) {
+        console.error('Error sending notification:', e);
+      }
+    }
+
+    // ============================================================
+    //  WAGER CONTROL
+    // ============================================================
+    function populateWagerPlayerSelect() {
+      const sel = document.getElementById('wagerPlayerSelect');
+      sel.innerHTML = '<option value="">Select Player</option>';
+      Object.entries(allUsers).forEach(([id, u]) => {
+        sel.innerHTML += `<option value="${id}">${escapeHtml(u.username)} (${formatNumber(u.coins||0)} coins)</option>`;
+      });
+    }
+    
+    function loadPlayerWagerData() {
+      const id = document.getElementById('wagerPlayerSelect').value;
+      if (!id) { document.getElementById('playerWagerPanel').style.display = 'none'; return; }
+      
+      const user = allUsers[id];
+      if (!user) return;
+      
+      const req = Math.floor((user.totalDeposits||0) * settings.wager.rate);
+      const prog = req > 0 ? ((user.totalWagered||0)/req*100) : 100;
+      
+      document.getElementById('wagerPlayerName').textContent = user.username;
+      document.getElementById('playerCoins').textContent = formatNumber(user.coins||0);
+      document.getElementById('playerDeposits').textContent = formatNumber(user.totalDeposits||0);
+      document.getElementById('playerWagered').textContent = formatNumber(user.totalWagered||0);
+      document.getElementById('playerRequiredWagered').textContent = formatNumber(req);
+      document.getElementById('playerWagerProgress').textContent = Math.min(100, Math.floor(prog)) + '%';
+      document.getElementById('wagerProgressFill').style.width = Math.min(100, prog) + '%';
+      document.getElementById('wagerAdjustSlider').max = Math.max(100000, (user.totalWagered||0) + 50000);
+      document.getElementById('wagerAdjustSlider').value = user.totalWagered||0;
+      document.getElementById('wagerAdjustAmount').value = user.totalWagered||0;
+      window._wagerPlayerId = id;
+      document.getElementById('playerWagerPanel').style.display = 'block';
+    }
+    
+    function updateWagerPreview() { const s = document.getElementById('wagerAdjustSlider'); document.getElementById('wagerAdjustAmount').value = s.value; }
+    function updateWagerSlider() { const a = document.getElementById('wagerAdjustAmount'); const s = document.getElementById('wagerAdjustSlider'); const v = parseInt(a.value); if (!isNaN(v)) s.value = Math.min(s.max, Math.max(0, v)); }
+    
+    function openPlayerWagerModal(id, name, current) {
+      window._wagerPlayerId = id;
+      document.getElementById('wagerModalTitle').textContent = 'Adjust Wager';
+      document.getElementById('wagerModalMessage').innerHTML = `Player: <strong>${name}</strong><br>Current: <strong>${formatNumber(current)}</strong> coins<br>New total:<br><input type="number" id="wagerInputAmount" class="input" value="${current}" style="margin-top:0.5rem;">`;
+      document.getElementById('wagerModal').classList.add('active');
+    }
+    
+    function closeWagerModal() { document.getElementById('wagerModal').classList.remove('active'); }
+    
+    async function confirmWagerAdjustment() {
+      const input = document.getElementById('wagerInputAmount');
+      const val = parseInt(input.value);
+      if (isNaN(val) || val < 0) return showToast('Invalid amount', true);
+      
+      const user = allUsers[window._wagerPlayerId];
+      if (user) {
+        user.totalWagered = val;
+        try {
+          await db.ref('users/' + window._wagerPlayerId + '/totalWagered').set(val);
+          showToast(`Updated to ${formatNumber(val)}`);
+          loadPlayerWagerData();
+          refreshAllData();
+        } catch (e) {
+          showToast('Error updating wager', true);
+          console.error(e);
+        }
+      }
+      closeWagerModal();
+    }
+    
+    async function adjustPlayerWager(action) {
+      const amount = parseInt(document.getElementById('wagerAdjustAmount').value);
+      if (isNaN(amount)) return showToast('Enter valid amount', true);
+      
+      const user = allUsers[window._wagerPlayerId];
+      if (!user) return;
+      
+      let newW = user.totalWagered || 0;
+      newW = action === 'add' ? newW + amount : Math.max(0, newW - amount);
+      user.totalWagered = newW;
+      
+      try {
+        await db.ref('users/' + window._wagerPlayerId + '/totalWagered').set(newW);
+        showToast(`${action === 'add' ? 'Added' : 'Removed'} ${formatNumber(amount)}`);
+        loadPlayerWagerData();
+        refreshAllData();
+      } catch (e) {
+        showToast('Error adjusting wager', true);
+        console.error(e);
+      }
+    }
+    
+    async function resetPlayerWagered() {
+      if (!confirm('Reset wagered to 0?')) return;
+      const user = allUsers[window._wagerPlayerId];
+      if (user) {
+        user.totalWagered = 0;
+        try {
+          await db.ref('users/' + window._wagerPlayerId + '/totalWagered').set(0);
+          showToast('Reset to 0');
+          loadPlayerWagerData();
+          refreshAllData();
+        } catch (e) {
+          showToast('Error resetting wager', true);
+          console.error(e);
+        }
+      }
+    }
+
+    // ============================================================
+    //  COIN MANAGEMENT
+    // ============================================================
+    function openCoinModal(action, userId) {
+      window._coinAction = action;
+      window._coinUserId = userId;
+      document.getElementById('coinModalTitle').textContent = action === 'add' ? 'Add Coins' : 'Remove Coins';
+      document.getElementById('coinModal').classList.add('active');
+    }
+    
+    function closeCoinModal() { document.getElementById('coinModal').classList.remove('active'); document.getElementById('coinAmount').value = ''; }
+    
+    async function processCoinAction() {
+      const amount = parseInt(document.getElementById('coinAmount').value);
+      if (!amount || amount < 1) return showToast('Enter valid amount', true);
+      
+      const user = allUsers[window._coinUserId];
+      if (!user) return showToast('User not found', true);
+      
+      if (window._coinAction === 'add') {
+        user.coins = (user.coins || 0) + amount;
+        try {
+          await db.ref('users/' + window._coinUserId + '/coins').set(user.coins);
+          showToast(`Added ${amount} coins`);
+          sendNotificationToPlayer(window._coinUserId, '💰 Coins Added', `Admin added ${amount} coins to your account.`, '💰');
+        } catch (e) {
+          showToast('Error adding coins', true);
+          console.error(e);
+        }
+      } else {
+        const newBal = (user.coins || 0) - amount;
+        if (newBal < 0) return showToast('Insufficient coins', true);
+        user.coins = newBal;
+        try {
+          await db.ref('users/' + window._coinUserId + '/coins').set(newBal);
+          showToast(`Removed ${amount} coins`);
+          sendNotificationToPlayer(window._coinUserId, '💰 Coins Removed', `Admin removed ${amount} coins from your account.`, '⚠️');
+        } catch (e) {
+          showToast('Error removing coins', true);
+          console.error(e);
+        }
+      }
+      closeCoinModal();
+      refreshAllData();
+    }
+
+    // ============================================================
+    //  SETTINGS
+    // ============================================================
+    async function saveGeneralSettings() {
+      const wagerRate = parseInt(document.getElementById('wagerRate').value) / 100;
+      const commissionRate = parseFloat(document.getElementById('commissionRate').value);
+      const depositBonusRate = parseFloat(document.getElementById('depositBonusRate').value);
+      const signupBonus = parseInt(document.getElementById('signupBonus').value);
+      
+      settings.wager.rate = wagerRate;
+      settings.general.commissionRate = commissionRate;
+      settings.general.depositBonusRate = depositBonusRate;
+      settings.general.signupBonus = signupBonus;
+      
+      try {
+        await db.ref('settings/wager').set({ rate: wagerRate });
+        await db.ref('settings/general').set({
+          commissionRate: commissionRate,
+          depositBonusRate: depositBonusRate,
+          signupBonus: signupBonus
+        });
+        showToast('Settings saved');
+      } catch (e) {
+        showToast('Error saving settings', true);
+        console.error(e);
+      }
+    }
+
+    // ============================================================
+    //  REFRESH
+    // ============================================================
+    function refreshAllData() {
+      loadAllData();
+      showToast('Refreshed');
+    }
+    
+    function loadAllData() {
+      // Everything is handled by real-time listeners
+      updateStats();
+      updatePlayersTable();
+      updateTopReferrers();
+      updateVIPDistribution();
+      populateWagerPlayerSelect();
+      updateWithdrawalsTables();
+      updateTicketsTable();
+      updateAllReferralsTable();
+      updateRecentActivity();
+      updateDepositRequests();
+      updateBadges();
+    }
+
+    // ============================================================
+    //  TAB NAV
+    // ============================================================
+    function setupTabs() {
+      document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+          document.getElementById(tab.dataset.section + 'Section').classList.add('active');
+        });
+      });
+    }
+
+    // ============================================================
+    //  INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      setupTabs();
+      
+      document.getElementById('notifyTarget').addEventListener('change', function() {
+        document.getElementById('specificPlayerSelect').style.display = this.value === 'specific' ? 'block' : 'none';
+        if (this.value !== 'specific') clearSelectedPlayer();
+      });
+    });
+
+    // Expose functions for inline onclick
+    window.verifyAdmin = verifyAdmin;
+    window.refreshAllData = refreshAllData;
+    window.openCoinModal = openCoinModal;
+    window.closeCoinModal = closeCoinModal;
+    window.processCoinAction = processCoinAction;
+    window.approveWithdrawal = approveWithdrawal;
+    window.openRejectModal = openRejectModal;
+    window.closeRejectModal = closeRejectModal;
+    window.confirmRejectWithdrawal = confirmRejectWithdrawal;
+    window.approveDeposit = approveDeposit;
+    window.rejectDeposit = rejectDeposit;
+    window.openReplyModal = openReplyModal;
+    window.closeReplyModal = closeReplyModal;
+    window.sendTicketReply = sendTicketReply;
+    window.sendBroadcastNotification = sendBroadcastNotification;
+    window.sendIndividualNotification = sendIndividualNotification;
+    window.searchPlayers = searchPlayers;
+    window.resetPlayerSearch = resetPlayerSearch;
+    window.searchPlayersForNotification = searchPlayersForNotification;
+    window.selectPlayerForNotification = selectPlayerForNotification;
+    window.clearSelectedPlayer = clearSelectedPlayer;
+    window.saveVIPConfig = saveVIPConfig;
+    window.saveGeneralSettings = saveGeneralSettings;
+    window.loadVIPConfig = loadVIPConfig;
+    window.loadPlayerWagerData = loadPlayerWagerData;
+    window.updateWagerPreview = updateWagerPreview;
+    window.updateWagerSlider = updateWagerSlider;
+    window.adjustPlayerWager = adjustPlayerWager;
+    window.resetPlayerWagered = resetPlayerWagered;
+    window.openPlayerWagerModal = openPlayerWagerModal;
+    window.closeWagerModal = closeWagerModal;
+    window.confirmWagerAdjustment = confirmWagerAdjustment;
+  </script>
+</body>
+</html>
