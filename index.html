@@ -11115,6 +11115,12 @@
         window.showPromoDisabledNotice = showPromoDisabledNotice;
 
         function switchPage(pageId) {
+            if (pageId === 'deposit') {
+                if (typeof window.handleDepositAction === 'function') {
+                    window.handleDepositAction();
+                }
+                return;
+            }
             if (pageId === 'promo') {
                 showPromoDisabledNotice();
                 return;
