@@ -1,0 +1,20 @@
+{
+  "209098723": {
+    "claimedChests": [],
+    "claimedCommission": 0,
+    "claimedChestBonus": 0,
+    "lastUpdated": "2026-10-30T20:30:47.439Z"
+  },
+  "player@example.com": {
+    "claimedChests": [],
+    "claimedCommission": 0,
+    "claimedChestBonus": 0,
+    "lastUpdated": "2026-10-30T20:30:47.439Z"
+  },
+  "user_123": {
+    "claimedChests": [],
+    "claimedCommission": 0,
+    "claimedChestBonus": 0,
+    "lastUpdated": "2026-10-30T20:30:47.439Z"
+  }
+}
