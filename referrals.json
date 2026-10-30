@@ -1,0 +1,110 @@
+{
+  "100001193": [
+    {
+      "id": "ref_sUOZRsZBRZSHRHhcamcWyEaPEiC2_2bEWvxYRE6R8xhuH3zDQfUegWeC2",
+      "uid": "2bEWvxYRE6R8xhuH3zDQfUegWeC2",
+      "email": "gh@gmail.com",
+      "totalDeposit": 0,
+      "totalBets": 0,
+      "isValid": false,
+      "status": "REGISTERED",
+      "date": "2026-09-10T23:33:43.113Z",
+      "qualified_at": null
+    },
+    {
+      "id": "ref_sUOZRsZBRZSHRHhcamcWyEaPEiC2_sUOZRsZBRZSHRHhcamcWyEaPEiC2",
+      "uid": "sUOZRsZBRZSHRHhcamcWyEaPEiC2",
+      "email": "zx@gmail.com",
+      "totalDeposit": 2600,
+      "totalBets": 9194,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-10T20:45:08.880Z",
+      "qualified_at": "2026-10-25T07:55:44.319Z"
+    }
+  ],
+  "100001263": [
+    {
+      "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref1",
+      "uid": "usr_ref1_1041",
+      "email": "player1@gmail.com",
+      "totalDeposit": 1500,
+      "totalBets": 12000,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-11T10:00:00.000Z",
+      "qualified_at": "2026-09-11T10:05:00.000Z"
+    },
+    {
+      "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref2",
+      "uid": "usr_ref2_1042",
+      "email": "player2@gmail.com",
+      "totalDeposit": 3000,
+      "totalBets": 25000,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-11T10:15:00.000Z",
+      "qualified_at": "2026-09-11T10:20:00.000Z"
+    },
+    {
+      "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref3",
+      "uid": "usr_ref3_1043",
+      "email": "player3@gmail.com",
+      "totalDeposit": 5000,
+      "totalBets": 40000,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-11T10:30:00.000Z",
+      "qualified_at": "2026-09-11T10:35:00.000Z"
+    },
+    {
+      "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref4",
+      "uid": "usr_ref4_1044",
+      "email": "player4@gmail.com",
+      "totalDeposit": 1000,
+      "totalBets": 8000,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-11T11:00:00.000Z",
+      "qualified_at": "2026-09-11T11:05:00.000Z"
+    },
+    {
+      "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_usr_ref5",
+      "uid": "usr_ref5_1045",
+      "email": "player5@gmail.com",
+      "totalDeposit": 2000,
+      "totalBets": 15000,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-11T11:30:00.000Z",
+      "qualified_at": "2026-09-11T11:35:00.000Z"
+    },
+    {
+      "id": "ref_y3WX168SrzdCmml4h0XVCefgLFx1_ayR52KfhfmMsiERU4Jq1T14YIVy1",
+      "uid": "ayR52KfhfmMsiERU4Jq1T14YIVy1",
+      "email": "asddd@gmail.com",
+      "totalDeposit": 0,
+      "totalBets": 0,
+      "isValid": false,
+      "status": "REGISTERED",
+      "date": {
+        "nanoseconds": 256000000,
+        "seconds": 1789171035
+      },
+      "qualified_at": null
+    }
+  ],
+  "INVPLAY1": [
+    {
+      "id": "ref_inv_player_1_ref_player_1",
+      "uid": "ref_player_1",
+      "email": "referee_player@test.com",
+      "totalDeposit": 2000,
+      "totalBets": 6000,
+      "isValid": true,
+      "status": "VALID",
+      "date": "2026-09-13T01:03:43.562Z",
+      "qualified_at": "2026-09-13T01:04:24.428Z"
+    }
+  ]
+}
