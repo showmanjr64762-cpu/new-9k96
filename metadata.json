@@ -1,0 +1,8 @@
+{
+  "name": "Pk96 Game Lobby",
+  "description": "Premium Casino & Arcade Game Suite featuring Super Soccer Slots, Pre-History Slots, The Mummy Slot, 10000 BC, Mayan Temple, Stairway to Wealth, Penalty Nations, Dwarves Mine, Final Survival, and Aviator.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
