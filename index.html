@@ -19,12 +19,17 @@
                 const loggedStr = localStorage.getItem('pk96_logged_user');
                 if (loggedStr) {
                     const u = JSON.parse(loggedStr);
-                    if (u && (u.email || u.uid) && !String(u.uid || '').startsWith('guest_') && u.email !== 'guest@pk96.com') {
+                    const uid = String(u && u.uid || localStorage.getItem('pk96_user_id') || '');
+                    const email = String(u && u.email || '').toLowerCase();
+                    if (u && (email || uid) && !uid.startsWith('guest_') && email !== 'guest@pk96.com') {
                         return true;
                     }
                 }
-            } catch(e) {}
-            return false;
+                const storedUserId = String(localStorage.getItem('pk96_user_id') || '');
+                return Boolean(storedUserId && !storedUserId.startsWith('guest_'));
+            } catch(e) {
+                return false;
+            }
         };
 
         window.switchPage = function(pageId) {
@@ -7357,7 +7362,18 @@
 
         // --- MODAL HELPERS ---
         function checkIsUserLoggedIn() {
-            return (typeof window.isUserLoggedIn === 'function') ? window.isUserLoggedIn() : (!!localStorage.getItem("pk96_logged_user") || !!localStorage.getItem("pk96_user_id"));
+            try {
+                const saved = JSON.parse(localStorage.getItem('pk96_logged_user') || 'null');
+                const uid = String(saved?.uid || saved?.id || saved?.userId || localStorage.getItem('pk96_user_id') || '');
+                const email = String(saved?.email || '').toLowerCase();
+                const identity = uid || email || String(saved?.username || saved?.displayName || '');
+                const isGuest = saved?.isGuest === true || uid.startsWith('guest_') || email === 'guest@pk96.com' || identity.toLowerCase() === 'guest';
+                if (saved && !isGuest && identity) return true;
+                if (uid && !uid.startsWith('guest_')) return true;
+                return false;
+            } catch (error) {
+                return false;
+            }
         }
 
         function openModal(modal) {
@@ -17081,7 +17097,7 @@
             if (!isMobile) {
                 setTimeout(() => {
                     if (errorEl) {
-                        errorEl.innerHTML = "⚠️ <strong>" + appDisplayName + " app is not on this device</strong>.<br><span style='font-size: 11px; opacity: 0.95;'>Opening " + appDisplayName + " requires a mobile phone. Please copy the Till ID below to transfer via your wallet or banking app.</span>";
+                        errorEl.innerHTML = "��️ <strong>" + appDisplayName + " app is not on this device</strong>.<br><span style='font-size: 11px; opacity: 0.95;'>Opening " + appDisplayName + " requires a mobile phone. Please copy the Till ID below to transfer via your wallet or banking app.</span>";
                         errorEl.style.display = "block";
                     }
                     if (clickedBtn) {
